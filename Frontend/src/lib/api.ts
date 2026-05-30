@@ -175,9 +175,24 @@ export const api = {
     return all;
   },
   getCase: (id: string) => fetchApi<Case | null>(`/cases/${id}`),
+  createCase: (data: Partial<Case>) =>
+    fetchApi<Case>("/cases", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   // Clients
   getClients: () => fetchApi<Client[]>("/clients"),
+  createClient: (data: Partial<Client>) =>
+    fetchApi<Client>("/clients", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateClient: (id: string, data: Partial<Client>) =>
+    fetchApi<Client>(`/clients/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
 
   // Tasks
   async getTasks(user: User) {
@@ -188,6 +203,11 @@ export const api = {
     }
     return all;
   },
+  createTask: (data: Partial<Task>) =>
+    fetchApi<Task>("/tasks", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   // Events
   async getEvents(user: User) {
@@ -198,6 +218,11 @@ export const api = {
     }
     return all;
   },
+  createEvent: (data: Partial<Event>) =>
+    fetchApi<Event>("/events", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   // Documents
   async getDocuments(user: User) {
@@ -226,6 +251,11 @@ export const api = {
     }
     return all;
   },
+  createMessage: (data: Partial<Message>) =>
+    fetchApi<Message>("/messages", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   // Analytics — firm only
   getAnalytics: () => fetchApi<Analytics>("/analytics"),

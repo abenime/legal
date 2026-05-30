@@ -25,15 +25,14 @@ export const Route = createFileRoute("/app/messages")({
 
 function MessagesPage() {
   const { user } = useAuth();
-  const { data: messages } = useApi(() => api.getMessages(user!), [user?.id]);
+  const { data: messages, refresh: refreshMessages } = useApi(() => api.getMessages(user!), [user?.id]);
   const [activeCase, setActiveCase] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
-  const [localMessages, setLocalMessages] = useState<NonNullable<typeof messages>>([]);
 
   const threads = useMemo(() => {
     const map = new Map<string, NonNullable<typeof messages>>();
-    const allMessages = [...(messages ?? []), ...localMessages];
+    const allMessages = messages ?? [];
 
     allMessages.forEach((m) => {
       const arr = map.get(m.caseId) ?? [];
@@ -45,7 +44,7 @@ function MessagesPage() {
     map.forEach((arr) => arr.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime()));
 
     return Array.from(map.entries());
-  }, [messages, localMessages]);
+  }, [messages]);
 
   const selected = activeCase ?? threads[0]?.[0] ?? null;
   const thread = threads.find(([k]) => k === selected)?.[1] ?? [];
@@ -194,23 +193,28 @@ function MessagesPage() {
           </div>
           <div className="border-t border-border bg-card p-4">
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 if (!draft.trim() || !selected) return;
 
-                const newMessage = {
-                  id: `local-${Date.now()}`,
-                  body: draft,
-                  caseId: selected,
-                  from: user!.id,
-                  fromName: user!.name,
-                  to: "u2", // Simulating send to lead attorney
-                  at: new Date().toISOString(),
-                  read: true,
-                };
+                try {
+                  const newMessage = {
+                    id: `m-${Date.now()}`,
+                    body: draft,
+                    caseId: selected,
+                    from: user!.id,
+                    fromName: user!.name,
+                    to: "u2", // Simulating send to lead attorney
+                    at: new Date().toISOString(),
+                    read: true,
+                  };
 
-                setLocalMessages((prev) => [...prev, newMessage]);
-                setDraft("");
+                  await api.createMessage(newMessage);
+                  refreshMessages();
+                  setDraft("");
+                } catch (error) {
+                  // Ignore
+                }
               }}
               className="flex gap-2"
             >

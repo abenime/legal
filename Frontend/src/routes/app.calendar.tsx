@@ -72,7 +72,7 @@ const TYPE_META: Record<string, { icon: any; cls: string; pillCls: string; label
 
 function CalendarPage() {
   const { user, isClient } = useAuth();
-  const { data: initialEvents, loading } = useApi(() => api.getEvents(user!), [user?.id]);
+  const { data: initialEvents, loading, refresh: refreshEvents } = useApi(() => api.getEvents(user!), [user?.id]);
   const { data: initialCases } = useApi(
     () => api.getUsers().then((users) => api.getCases(users[0])),
     [],
@@ -236,36 +236,41 @@ function CalendarPage() {
     setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
   };
 
-  const handleAddEventSubmit = (e: React.FormEvent) => {
+  const handleAddEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
       toast.error("Event title is required");
       return;
     }
 
-    const newEvent = {
-      id: "e_" + Date.now(),
-      title: formData.title.trim(),
-      type: formData.type,
-      date: formData.date,
-      time: formData.time,
-      caseId: formData.caseId || null,
-      reminder: formData.reminder,
-      notes: formData.notes.trim() || "No internal notes provided.",
-    };
+    try {
+      const newEvent = {
+        id: "e_" + Date.now(),
+        title: formData.title.trim(),
+        type: formData.type,
+        date: formData.date,
+        time: formData.time,
+        caseId: formData.caseId || null,
+        reminder: formData.reminder,
+        notes: formData.notes.trim() || "No internal notes provided.",
+      };
 
-    setEvents((prev) => [...prev, newEvent]);
-    setCreateOpen(false);
-    setFormData({
-      title: "",
-      type: "meeting",
-      date: formatDateString(selectedDate),
-      time: "10:00",
-      caseId: "",
-      reminder: "1h",
-      notes: "",
-    });
-    toast.success("Event scheduled successfully");
+      await api.createEvent(newEvent);
+      refreshEvents();
+      setCreateOpen(false);
+      setFormData({
+        title: "",
+        type: "meeting",
+        date: formatDateString(selectedDate),
+        time: "10:00",
+        caseId: "",
+        reminder: "1h",
+        notes: "",
+      });
+      toast.success("Event scheduled successfully");
+    } catch (error) {
+      toast.error("Failed to schedule event");
+    }
   };
 
   const handleDeleteEvent = (eventId: string) => {

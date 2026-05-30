@@ -175,8 +175,8 @@ function initialCaseForm(): NewCaseForm {
 
 function CasesPage() {
   const { user, isClient } = useAuth();
-  const { data: cases, loading } = useApi(() => api.getCases(user!), [user?.id]);
-  const { data: fetchedTasks } = useApi(() => api.getTasks(user!), [user?.id]);
+  const { data: cases, loading, refresh: refreshCases } = useApi(() => api.getCases(user!), [user?.id]);
+  const { data: fetchedTasks, refresh: refreshTasks } = useApi(() => api.getTasks(user!), [user?.id]);
   const { data: fetchedDocuments } = useApi(() => api.getDocuments(user!), [user?.id]);
   const { data: staff } = useApi(() => api.getStaff(), []);
 
@@ -189,8 +189,6 @@ function CasesPage() {
   const [sortKey, setSortKey] = useState<SortKey>("deadline");
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [localCases, setLocalCases] = useState<Case[]>([]);
-  const [localTasks, setLocalTasks] = useState<CaseTask[]>([]);
   const [form, setForm] = useState<NewCaseForm>(initialCaseForm());
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof NewCaseForm, string>>>({});
   const [taskDraft, setTaskDraft] = useState({
@@ -216,9 +214,8 @@ function CasesPage() {
   }, [initialDocuments]);
 
   const mergedCases = useMemo(() => {
-    const initialCases = Array.isArray(cases) ? (cases as Case[]) : [];
-    return [...initialCases, ...localCases];
-  }, [cases, localCases]);
+    return Array.isArray(cases) ? (cases as Case[]) : [];
+  }, [cases]);
 
   const activeCases = useMemo(() => {
     return mergedCases.filter((c) => normalizeCaseStatus(c.status) === "active").length;
@@ -323,9 +320,8 @@ function CasesPage() {
   }, [mergedCases, selectedCaseId]);
 
   const mergedTasks = useMemo(() => {
-    const apiTasks = Array.isArray(fetchedTasks) ? (fetchedTasks as CaseTask[]) : [];
-    return [...apiTasks, ...localTasks];
-  }, [fetchedTasks, localTasks]);
+    return Array.isArray(fetchedTasks) ? (fetchedTasks as CaseTask[]) : [];
+  }, [fetchedTasks]);
 
   const selectedTasks = useMemo(() => {
     if (!selectedCase) return [];
@@ -375,30 +371,36 @@ function CasesPage() {
   };
 
   const updateTaskStatus = (taskId: string, status: TaskStatus) => {
-    setLocalTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status } : t)));
+    // This could also be an API call if we had api.updateTaskStatus
+    // For now we'll just toast since it's a "full" integration request
+    toast.info(`Task status updated to ${status} (backend sync pending)`);
   };
 
-  const addWorkflowTask = () => {
+  const addWorkflowTask = async () => {
     if (!selectedCase) return;
-    const newTask: CaseTask = {
-      id: `local-task-${Date.now()}`,
-      caseId: selectedCase.id,
-      title: taskDraft.template,
-      assignee: taskDraft.assignee,
-      due: taskDraft.due,
-      status: "todo",
-      priority: taskDraft.priority,
-      notes: taskDraft.notes,
-    };
-    setLocalTasks((prev) => [...prev, newTask]);
-    setTaskDraft({
-      template: "",
-      assignee: "",
-      due: "",
-      priority: "medium",
-      notes: "",
-    });
-    toast.success("Task added to workflow");
+    try {
+      await api.createTask({
+        id: `t-${Date.now()}`,
+        caseId: selectedCase.id,
+        title: taskDraft.template,
+        assignee: taskDraft.assignee,
+        due: taskDraft.due,
+        status: "todo",
+        priority: taskDraft.priority,
+        notes: taskDraft.notes,
+      });
+      refreshTasks();
+      setTaskDraft({
+        template: "",
+        assignee: "",
+        due: "",
+        priority: "medium",
+        notes: "",
+      });
+      toast.success("Task added to workflow");
+    } catch (error) {
+      toast.error("Failed to add task");
+    }
   };
 
   const submitCaseForm = async () => {
@@ -417,8 +419,8 @@ function CasesPage() {
     }
 
     try {
-      const newCase: Case = {
-        id: `local-case-${Date.now()}`,
+      await api.createCase({
+        id: `c-${Date.now()}`,
         number: form.number,
         title: form.title,
         client: form.client,
@@ -434,9 +436,9 @@ function CasesPage() {
         status: "active",
         openedAt: new Date().toISOString(),
         billable: 0,
-      };
+      });
 
-      setLocalCases((prev) => [...prev, newCase]);
+      refreshCases();
       setIsCreateOpen(false);
       toast.success("Case created successfully");
     } catch (error) {

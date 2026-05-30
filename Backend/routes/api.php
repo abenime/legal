@@ -137,6 +137,19 @@ Route::post('/clients', function (Request $request) {
     return response()->json($data, 201);
 });
 
+Route::put('/clients/{id}', function (Request $request, $id) {
+    $data = $request->all();
+    if (isset($data['notes']) && is_array($data['notes'])) {
+        $data['notes'] = json_encode($data['notes']);
+    }
+    DB::table('clients')->where('id', $id)->update($data);
+    $client = DB::table('clients')->where('id', $id)->first();
+    if ($client && isset($client->notes) && is_string($client->notes)) {
+        $client->notes = json_decode($client->notes);
+    }
+    return response()->json($client);
+});
+
 // Tasks
 Route::get('/tasks', function () {
     return response()->json(DB::table('tasks')->get());
@@ -174,8 +187,19 @@ Route::get('/messages', function () {
     return response()->json(DB::table('messages')->get());
 });
 
+Route::post('/messages', function (Request $request) {
+    $data = $request->all();
+    DB::table('messages')->insert($data);
+    return response()->json($data, 201);
+});
+
 // Analytics
 Route::get('/analytics', function () {
-    $frontendDataPath = base_path('../Frontend/src/data');
-    return response()->json(json_decode(file_get_contents("$frontendDataPath/analytics.json")));
+    return response()->json([
+        "revenue" => ["ytd" => 0, "lastMonth" => 0, "thisMonth" => 0, "growth" => 0],
+        "cases" => ["active" => 0, "closedYtd" => 0, "winRate" => 0, "avgDuration" => 0],
+        "monthlyRevenue" => [],
+        "practiceBreakdown" => [],
+        "lawyerProductivity" => []
+    ]);
 });

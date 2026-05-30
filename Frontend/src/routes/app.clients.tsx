@@ -64,7 +64,7 @@ export const Route = createFileRoute("/app/clients")({
 });
 
 function ClientsPage() {
-  const { data: initialClients, loading: clientsLoading } = useApi(() => api.getClients(), []);
+  const { data: initialClients, loading: clientsLoading, refresh: refreshClients } = useApi(() => api.getClients(), []);
   const { data: initialCases } = useApi(
     () => api.getUsers().then((users) => api.getCases(users[0])),
     [],
@@ -158,43 +158,48 @@ function ClientsPage() {
     return true;
   });
 
-  const handleAddClientSubmit = (e: React.FormEvent) => {
+  const handleAddClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.email.trim()) {
       toast.error("Name and Email are required");
       return;
     }
 
-    const newClientObj = {
-      id: "cl_" + Date.now(),
-      name: formData.name.trim(),
-      email: formData.email.trim(),
-      phone: formData.phone.trim() || "N/A",
-      company: formData.company.trim() || "Self",
-      since: new Date().toISOString().split("T")[0],
-      activeCases: 0,
-      outstanding: 0,
-      retainerBalance: parseFloat(formData.retainerBalance) || 0,
-      address: formData.address.trim() || "N/A",
-      notes: [],
-    };
+    try {
+      const newClientObj = {
+        id: "cl_" + Date.now(),
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || "N/A",
+        company: formData.company.trim() || "Self",
+        since: new Date().toISOString().split("T")[0],
+        activeCases: 0,
+        outstanding: 0,
+        retainerBalance: parseFloat(formData.retainerBalance) || 0,
+        address: formData.address.trim() || "N/A",
+        notes: [],
+      };
 
-    setClients((prev) => [...prev, newClientObj]);
-    setSelectedId(newClientObj.id);
-    setAddClientOpen(false);
-    setShowMobileDetail(true);
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      company: "",
-      retainerBalance: "0",
-      address: "",
-    });
-    toast.success("Client added successfully");
+      await api.createClient(newClientObj);
+      refreshClients();
+      setSelectedId(newClientObj.id);
+      setAddClientOpen(false);
+      setShowMobileDetail(true);
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        company: "",
+        retainerBalance: "0",
+        address: "",
+      });
+      toast.success("Client added successfully");
+    } catch (error) {
+      toast.error("Failed to add client");
+    }
   };
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!newNote.trim()) return;
 
     const noteObj = {
@@ -204,20 +209,15 @@ function ClientsPage() {
       text: newNote.trim(),
     };
 
-    setClients((prev) =>
-      prev.map((c) => {
-        if (c.id === client.id) {
-          return {
-            ...c,
-            notes: [noteObj, ...(c.notes || [])],
-          };
-        }
-        return c;
-      }),
-    );
-
-    setNewNote("");
-    toast.success("Note added successfully");
+    try {
+      const updatedNotes = [noteObj, ...(client.notes || [])];
+      await api.updateClient(client.id, { notes: updatedNotes });
+      refreshClients();
+      setNewNote("");
+      toast.success("Note added successfully");
+    } catch (error) {
+      toast.error("Failed to add note");
+    }
   };
 
   const handleSignDocument = (docId: string) => {
