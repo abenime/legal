@@ -1,0 +1,88 @@
+[
+  {
+    "id": "u4",
+    "name": "James Whitaker",
+    "email": "client@firm.com",
+    "phone": "+1 (415) 555-0182",
+    "company": "Whitaker Capital",
+    "since": "2024-09-12",
+    "activeCases": 2,
+    "outstanding": 4250,
+    "retainerBalance": 5000,
+    "address": "100 Pine St, Suite 2400, San Francisco, CA 94111",
+    "notes": [
+      {
+        "id": "n1",
+        "date": "2026-05-20T10:00:00Z",
+        "author": "Marcus Hale",
+        "text": "Met with James to discuss Northbridge discovery delays. Client is frustrated with their slow responses."
+      },
+      {
+        "id": "n2",
+        "date": "2026-05-12T14:30:00Z",
+        "author": "Sofia Reyes",
+        "text": "Organized new corporate documents for Whitaker Capital Series B filing. Outstanding items received."
+      }
+    ]
+  },
+  {
+    "id": "u5",
+    "name": "Ana Martinez",
+    "email": "client2@firm.com",
+    "phone": "+1 (415) 555-0144",
+    "company": "Self",
+    "since": "2026-02-28",
+    "activeCases": 1,
+    "outstanding": 0,
+    "retainerBalance": 2500,
+    "address": "845 Oakwood Terrace, Oakland, CA 94610",
+    "notes": [
+      {
+        "id": "n3",
+        "date": "2026-05-25T11:00:00Z",
+        "author": "Eleanor Vance",
+        "text": "Drafted initial trust amendment package. Waiting on client's confirmation of property deeds."
+      }
+    ]
+  },
+  {
+    "id": "cl3",
+    "name": "Daniel Holloway",
+    "email": "d.holloway@example.com",
+    "phone": "+1 (415) 555-0117",
+    "company": "Self",
+    "since": "2025-11-20",
+    "activeCases": 1,
+    "outstanding": 1800,
+    "retainerBalance": 0,
+    "address": "257 Guerrero St, San Francisco, CA 94103",
+    "notes": [
+      {
+        "id": "n4",
+        "date": "2026-05-28T09:15:00Z",
+        "author": "Marcus Hale",
+        "text": "Conducted mock examination prep with Daniel. He is anxious but well-prepared for trial Day 1."
+      }
+    ]
+  },
+  {
+    "id": "cl4",
+    "name": "Cedar Grove LLC",
+    "email": "ops@cedargrove.co",
+    "phone": "+1 (415) 555-0199",
+    "company": "Cedar Grove LLC",
+    "since": "2023-05-01",
+    "activeCases": 0,
+    "outstanding": 0,
+    "retainerBalance": 0,
+    "address": "1200 Redwood Hwy, Mill Valley, CA 94941",
+    "notes": [
+      {
+        "id": "n5",
+        "date": "2026-04-10T16:00:00Z",
+        "author": "Eleanor Vance",
+        "text": "All closing papers completed. The escrow account was settled, and property deeds were transferred successfully. Case archived."
+      }
+    ]
+  }
+]

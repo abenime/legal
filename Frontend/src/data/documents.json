@@ -1,0 +1,62 @@
+[
+  {
+    "id": "d1",
+    "caseId": "c1",
+    "name": "Complaint — Whitaker v. Northbridge.pdf",
+    "type": "pleading",
+    "size": "412 KB",
+    "uploadedBy": "Marcus Hale",
+    "uploadedAt": "2026-02-15",
+    "signed": true
+  },
+  {
+    "id": "d2",
+    "caseId": "c1",
+    "name": "Discovery Request — Set 1.docx",
+    "type": "discovery",
+    "size": "88 KB",
+    "uploadedBy": "Sofia Reyes",
+    "uploadedAt": "2026-04-22",
+    "signed": false
+  },
+  {
+    "id": "d3",
+    "caseId": "c2",
+    "name": "Trust Agreement — Draft v2.pdf",
+    "type": "contract",
+    "size": "256 KB",
+    "uploadedBy": "Eleanor Vance",
+    "uploadedAt": "2026-05-18",
+    "signed": false
+  },
+  {
+    "id": "d4",
+    "caseId": "c3",
+    "name": "Patent Application — Series B.pdf",
+    "type": "filing",
+    "size": "1.2 MB",
+    "uploadedBy": "Marcus Hale",
+    "uploadedAt": "2026-01-12",
+    "signed": true
+  },
+  {
+    "id": "d5",
+    "caseId": "c3",
+    "name": "Inventor Declaration.pdf",
+    "type": "evidence",
+    "size": "94 KB",
+    "uploadedBy": "Marcus Hale",
+    "uploadedAt": "2026-01-14",
+    "signed": true
+  },
+  {
+    "id": "d6",
+    "caseId": "c1",
+    "name": "Retainer Agreement.pdf",
+    "type": "contract",
+    "size": "120 KB",
+    "uploadedBy": "Eleanor Vance",
+    "uploadedAt": "2026-02-14",
+    "signed": true
+  }
+]

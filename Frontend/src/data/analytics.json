@@ -1,0 +1,24 @@
+{
+  "revenue": { "ytd": 482500, "lastMonth": 78400, "thisMonth": 64200, "growth": 12.4 },
+  "cases": { "active": 4, "closedYtd": 17, "winRate": 84, "avgDuration": 142 },
+  "monthlyRevenue": [
+    { "month": "Jan", "value": 62000 },
+    { "month": "Feb", "value": 71500 },
+    { "month": "Mar", "value": 68900 },
+    { "month": "Apr", "value": 82400 },
+    { "month": "May", "value": 78400 },
+    { "month": "Jun", "value": 64200 }
+  ],
+  "practiceBreakdown": [
+    { "name": "Litigation", "value": 42 },
+    { "name": "Estate", "value": 18 },
+    { "name": "IP", "value": 22 },
+    { "name": "Criminal", "value": 12 },
+    { "name": "Real Estate", "value": 6 }
+  ],
+  "lawyerProductivity": [
+    { "name": "Eleanor Vance", "billable": 168, "target": 160 },
+    { "name": "Marcus Hale", "billable": 192, "target": 180 },
+    { "name": "Sofia Reyes", "billable": 144, "target": 140 }
+  ]
+}

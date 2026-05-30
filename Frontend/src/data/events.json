@@ -1,0 +1,122 @@
+[
+  {
+    "id": "e1",
+    "date": "2026-06-02",
+    "time": "09:30",
+    "title": "Status conference — Whitaker v. Northbridge",
+    "type": "court",
+    "caseId": "c1",
+    "reminder": "1d",
+    "notes": "Bring all discovery documents. Judge Morrison presiding. Expected duration: 2 hours."
+  },
+  {
+    "id": "e2",
+    "date": "2026-06-03",
+    "time": "14:00",
+    "title": "Client meeting — Ana Martinez",
+    "type": "meeting",
+    "caseId": "c2",
+    "reminder": "1h",
+    "notes": "Review trust amendment v3 drafts. Confirm property deed uploads from client."
+  },
+  {
+    "id": "e3",
+    "date": "2026-06-05",
+    "time": "10:00",
+    "title": "Trial day 1 — State v. Holloway",
+    "type": "court",
+    "caseId": "c4",
+    "reminder": "1d",
+    "notes": "Opening arguments. Have witness list and evidence binders ready. Marcus leads."
+  },
+  {
+    "id": "e4",
+    "date": "2026-06-08",
+    "time": "16:30",
+    "title": "Deadline: Trust amendment v3",
+    "type": "deadline",
+    "caseId": "c2",
+    "reminder": "1d",
+    "notes": "Final filing deadline for Martinez trust amendment. All signatures must be notarized."
+  },
+  {
+    "id": "e5",
+    "date": "2026-06-12",
+    "time": "17:00",
+    "title": "Deadline: Motion response",
+    "type": "deadline",
+    "caseId": "c1",
+    "reminder": "1d",
+    "notes": "Opposition to Northbridge's motion to compel. Sofia to prepare draft for Marcus review."
+  },
+  {
+    "id": "e6",
+    "date": "2026-06-15",
+    "time": "11:00",
+    "title": "Consultation — James Whitaker",
+    "type": "meeting",
+    "caseId": "c3",
+    "reminder": "1h",
+    "notes": "Patent application review. Discuss Series B filing timeline and engineering spec checklist."
+  },
+  {
+    "id": "e7",
+    "date": "2026-05-28",
+    "time": "14:00",
+    "title": "Review discovery files with Marcus",
+    "type": "meeting",
+    "caseId": "c1",
+    "reminder": "15m",
+    "notes": "Internal strategy session on Northbridge discovery delays and deposition prep."
+  },
+  {
+    "id": "e8",
+    "date": "2026-05-31",
+    "time": "10:00",
+    "title": "Pre-trial briefing — State v. Holloway",
+    "type": "meeting",
+    "caseId": "c4",
+    "reminder": "1h",
+    "notes": "Final pre-trial briefing with Daniel Holloway. Witness testimony prep and courtroom etiquette review."
+  },
+  {
+    "id": "e9",
+    "date": "2026-06-05",
+    "time": "13:30",
+    "title": "Trial day 1 wrap-up — State v. Holloway",
+    "type": "meeting",
+    "caseId": "c4",
+    "reminder": "none",
+    "notes": "Post-trial Day 1 debrief. Document juror reactions and opposing counsel strategy observations."
+  },
+  {
+    "id": "e10",
+    "date": "2026-06-19",
+    "time": "09:00",
+    "title": "Depositions of Northbridge executives",
+    "type": "court",
+    "caseId": "c1",
+    "reminder": "1d",
+    "notes": "Depose CEO and CFO of Northbridge Holdings. Have all contract exhibits tabbed and ready."
+  },
+  {
+    "id": "e11",
+    "date": "2026-06-20",
+    "time": "17:00",
+    "title": "Deadline: Patent application submission",
+    "type": "deadline",
+    "caseId": "c3",
+    "reminder": "1d",
+    "notes": "USPTO submission deadline. All engineering specs, inventor declarations, and claims must be finalized."
+  },
+  {
+    "id": "e12",
+    "date": "2026-06-22",
+    "time": "10:30",
+    "title": "Settlement negotiations — Whitaker v. Northbridge",
+    "type": "court",
+    "caseId": "c1",
+    "reminder": "1h",
+    "notes": "Settlement conference with Judge Morrison. Target range: $120K–$160K. Do not go below $100K."
+  }
+]
