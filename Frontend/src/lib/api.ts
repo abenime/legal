@@ -291,6 +291,13 @@ export const api = {
     });
   },
 
+  // AI
+  askAI: (prompt: string) =>
+    fetchApi<{ text: string }>("/ai-chat", {
+      method: "POST",
+      body: JSON.stringify({ prompt }),
+    }),
+
   // Analytics — firm only
   getAnalytics: () => fetchApi<Analytics>("/analytics"),
 };

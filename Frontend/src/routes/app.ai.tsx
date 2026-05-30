@@ -59,14 +59,102 @@ const TOOLS = [
   },
 ];
 
+import { toast } from "sonner";
+
 function AIPage() {
   const { user } = useAuth();
   const [activeTool, setActiveTool] = useState<string>("chat");
   const { data: cases } = useApi(() => api.getCases(user!), [user?.id]);
 
+  // Chat state
+  const [prompt, setPrompt] = useState("");
+  const [messages, setMessages] = useState<{ role: "user" | "ai"; text: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   // Drafting state
   const [draftTemplate, setDraftTemplate] = useState("");
   const [draftCase, setDraftCase] = useState("");
+  const [draftInstructions, setDraftInstructions] = useState("");
+
+  const [summaryCase, setSummaryCase] = useState("");
+  const [summaryFocus, setSummaryFocus] = useState("");
+
+  const handleAskAI = async () => {
+    if (!prompt.trim()) return;
+
+    const userMessage = prompt.trim();
+    setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
+    setPrompt("");
+    setIsLoading(true);
+
+    try {
+      const response = await api.askAI(userMessage);
+      setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
+    } catch (error) {
+      toast.error("AI request failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDrafting = async () => {
+    if (!draftCase || !draftTemplate) return;
+    
+    const selectedCase = cases?.find(c => c.id === draftCase);
+    const draftingPrompt = `Draft a ${draftTemplate} for the case "${selectedCase?.title}" (Matter #${selectedCase?.number}). 
+    Additional instructions: ${draftInstructions || "None provided."}`;
+
+    setMessages((prev) => [...prev, { role: "user", text: draftingPrompt }]);
+    setActiveTool("chat");
+    setIsLoading(true);
+
+    try {
+      const response = await api.askAI(draftingPrompt);
+      setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
+    } catch (error) {
+      toast.error("Drafting failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSummary = async () => {
+    if (!summaryCase) return;
+
+    const selectedCase = (cases as any)?.find((c: any) => c.id === summaryCase);
+    const summaryPrompt = `Provide a comprehensive executive summary for the case "${selectedCase?.title}" (Matter #${selectedCase?.number}). 
+    Focus area: ${summaryFocus || "General overview, procedural history, and upcoming deadlines"}.`;
+
+    setMessages((prev) => [...prev, { role: "user", text: summaryPrompt }]);
+    setActiveTool("chat");
+    setIsLoading(true);
+
+    try {
+      const response = await api.askAI(summaryPrompt);
+      setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
+    } catch (error) {
+      toast.error("Summary generation failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReview = async () => {
+    const reviewPrompt = "Review the provided contract (simulated context) and highlight three major risks and two key provisions regarding governing law and payment terms. Format the response clearly.";
+
+    setMessages((prev) => [...prev, { role: "user", text: "Please review this contract for risks and provisions." }]);
+    setActiveTool("chat");
+    setIsLoading(true);
+
+    try {
+      const response = await api.askAI(reviewPrompt);
+      setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
+    } catch (error) {
+      toast.error("Review failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -105,50 +193,56 @@ function AIPage() {
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-muted/10">
           {activeTool === "chat" && (
-            <div className="mx-auto max-w-3xl space-y-6">
-              <div className="rounded-lg border border-border bg-linear-to-br from-card to-secondary p-6 shadow-sm">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/20 text-accent">
-                    <Sparkles className="h-5 w-5" />
+            <div className="mx-auto max-w-3xl space-y-6 flex flex-col h-full">
+              <div className="flex-1 space-y-4 overflow-y-auto pb-4">
+                {messages.length === 0 && (
+                   <div className="text-center py-12">
+                      <Sparkles className="h-12 w-12 text-accent/20 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-foreground">Start a legal consultation</h3>
+                      <p className="text-sm text-muted-foreground">Ask questions about cases, law, or draft documents.</p>
+                   </div>
+                )}
+                {messages.map((m, i) => (
+                  <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[80%] rounded-2xl p-4 text-sm ${
+                      m.role === "user" 
+                        ? "bg-primary text-primary-foreground rounded-tr-none" 
+                        : "bg-card border border-border text-foreground rounded-tl-none"
+                    }`}>
+                      <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
+                    </div>
                   </div>
-                  <h2 className="text-lg font-semibold text-foreground">
-                    How can I help you today?
-                  </h2>
-                </div>
-                <Textarea
-                  className="min-h-32 bg-card text-base resize-none"
-                  placeholder='e.g. "Summarize the Whitaker v. Northbridge discovery so far and list the open items."'
-                />
-                <div className="mt-4 flex justify-between items-center">
-                  <div className="text-xs text-muted-foreground">
-                    AI responses may not always be perfectly accurate. Verify important information.
-                  </div>
-                  <Button>
-                    <Sparkles className="mr-2 h-4 w-4" /> Ask AI
-                  </Button>
-                </div>
+                ))}
+                {isLoading && (
+                   <div className="flex justify-start">
+                     <div className="bg-card border border-border text-foreground rounded-2xl rounded-tl-none p-4 text-sm animate-pulse">
+                        Thinking...
+                     </div>
+                   </div>
+                )}
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div
-                  className="rounded-lg border border-border bg-card p-4 hover:border-accent cursor-pointer transition-colors"
-                  onClick={() => setActiveTool("drafting")}
-                >
-                  <FileText className="h-5 w-5 text-accent mb-2" />
-                  <h3 className="font-medium">Draft a document</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Create standard legal documents quickly using your firm's templates.
-                  </p>
-                </div>
-                <div
-                  className="rounded-lg border border-border bg-card p-4 hover:border-accent cursor-pointer transition-colors"
-                  onClick={() => setActiveTool("review")}
-                >
-                  <Scale className="h-5 w-5 text-accent mb-2" />
-                  <h3 className="font-medium">Review a contract</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Upload an agreement to highlight unusual clauses and potential risks.
-                  </p>
+              <div className="rounded-lg border border-border bg-card p-4 shadow-sm mt-auto">
+                <div className="flex gap-2">
+                  <Textarea
+                    className="min-h-20 bg-muted/20 text-base resize-none border-none focus-visible:ring-0 p-2"
+                    placeholder="Type your question or request..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                       if (e.key === 'Enter' && !e.shiftKey) {
+                         e.preventDefault();
+                         handleAskAI();
+                       }
+                    }}
+                  />
+                  <Button 
+                    className="self-end h-10 w-10 p-0 rounded-full" 
+                    onClick={handleAskAI}
+                    disabled={isLoading || !prompt.trim()}
+                  >
+                    <ArrowRight className="h-5 w-5" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -168,7 +262,7 @@ function AIPage() {
                         <SelectValue placeholder="Select a case context..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {(cases ?? []).map((c: { id: string; title: string }) => (
+                        {(cases ?? []).map((c: any) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.title}
                           </SelectItem>
@@ -195,11 +289,13 @@ function AIPage() {
                     <Textarea
                       placeholder="e.g. Include a clause about binding arbitration in New York..."
                       className="min-h-24"
+                      value={draftInstructions}
+                      onChange={(e) => setDraftInstructions(e.target.value)}
                     />
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <Button disabled={!draftCase || !draftTemplate}>
+                  <Button disabled={!draftCase || !draftTemplate || isLoading} onClick={handleDrafting}>
                     <Sparkles className="mr-2 h-4 w-4" /> Generate Draft
                   </Button>
                 </div>
@@ -213,14 +309,17 @@ function AIPage() {
                 <Scale className="h-6 w-6 text-accent" /> Contract Review
               </h2>
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="rounded-lg border-2 border-dashed border-border p-8 text-center flex flex-col items-center justify-center bg-card hover:bg-secondary/20 transition-colors cursor-pointer">
+                <div 
+                   className="rounded-lg border-2 border-dashed border-border p-8 text-center flex flex-col items-center justify-center bg-card hover:bg-secondary/20 transition-colors cursor-pointer"
+                   onClick={handleReview}
+                >
                   <Upload className="h-10 w-10 text-muted-foreground mb-4" />
                   <h3 className="font-medium">Upload Document</h3>
                   <p className="text-sm text-muted-foreground mt-1 mb-4">
                     Drag and drop or click to browse
                   </p>
-                  <Button variant="outline" size="sm">
-                    Select File
+                  <Button variant="outline" size="sm" disabled={isLoading}>
+                    {isLoading ? "Processing..." : "Select File"}
                   </Button>
                 </div>
 
@@ -255,12 +354,12 @@ function AIPage() {
               <div className="space-y-6 rounded-lg border border-border bg-card p-6 shadow-sm">
                 <div className="grid gap-2">
                   <Label>Select Case to Summarize</Label>
-                  <Select>
+                  <Select value={summaryCase} onValueChange={setSummaryCase}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a case..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {(cases ?? []).map((c: { id: string; title: string }) => (
+                      {(cases ?? []).map((c: any) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.title}
                         </SelectItem>
@@ -270,10 +369,14 @@ function AIPage() {
                 </div>
                 <div className="grid gap-2">
                   <Label>Focus Area (Optional)</Label>
-                  <Input placeholder="e.g. Focus on procedural history and upcoming deadlines" />
+                  <Input 
+                    placeholder="e.g. Focus on procedural history and upcoming deadlines" 
+                    value={summaryFocus}
+                    onChange={(e) => setSummaryFocus(e.target.value)}
+                  />
                 </div>
                 <div className="flex justify-end">
-                  <Button>
+                  <Button disabled={!summaryCase || isLoading} onClick={handleSummary}>
                     <Sparkles className="mr-2 h-4 w-4" /> Generate Summary
                   </Button>
                 </div>

@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -275,6 +276,56 @@ Route::post('/settings/logo', function (Request $request) {
         ]);
     }
     return response()->json(['error' => 'No file uploaded'], 400);
+});
+
+// AI
+Route::get('/ai-debug', function() {
+    return response()->json([
+        'status' => 'ok',
+        'has_api_key' => !empty(env('GEMINI_API_KEY')),
+        'time' => now()->toDateTimeString()
+    ]);
+});
+
+Route::post('/ai-chat', function (Request $request) {
+    $prompt = $request->input('prompt');
+    $apiKey = env('GEMINI_API_KEY');
+    
+    if (!$apiKey) {
+        return response()->json(['error' => 'Gemini API key not configured'], 500);
+    }
+
+    $url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
+    
+    try {
+        $response = Http::asJson()->post($url, [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $prompt]
+                    ]
+                ]
+            ]
+        ]);
+
+        if ($response->failed()) {
+            return response()->json([
+                'error' => 'AI request failed',
+                'status' => $response->status(),
+                'details' => $response->json(),
+            ], $response->status());
+        }
+
+        $data = $response->json();
+        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? 'No response from AI.';
+
+        return response()->json(['text' => $text]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Server error during AI request',
+            'message' => $e->getMessage()
+        ], 500);
+    }
 });
 
 // Analytics
