@@ -141,11 +141,9 @@ function ClientsPage() {
   const clientDocuments = documents.filter((d) => clientCaseIds.includes(d.caseId));
 
   // Invoices linked to the selected client
-  const clientInvoices = initialInvoices
-    ? initialInvoices.filter(
-        (i) => i.clientId === client?.id || i.client?.toLowerCase() === client?.name?.toLowerCase(),
-      )
-    : [];
+  const clientInvoices = (initialInvoices || []).filter(
+    (i) => i.clientId === client?.id || i.client?.toLowerCase() === client?.name?.toLowerCase(),
+  );
 
   // Filtering clients
   const filteredClients = clients.filter((c) => {
@@ -292,7 +290,7 @@ function ClientsPage() {
                   <Plus className="mr-2 h-4 w-4" /> Add client
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-125">
                 <DialogHeader>
                   <DialogTitle>Add New Client</DialogTitle>
                   <DialogDescription>
@@ -405,7 +403,7 @@ function ClientsPage() {
                 <Plus className="mr-2 h-4 w-4" /> Add client
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-125">
               <DialogHeader>
                 <DialogTitle>Add New Client</DialogTitle>
                 <DialogDescription>
@@ -503,7 +501,7 @@ function ClientsPage() {
         <div
           className={`${
             showMobileDetail ? "hidden" : "flex"
-          } md:flex flex-col w-full md:w-[360px] lg:w-[400px] border-r border-border bg-card shrink-0`}
+          } md:flex flex-col w-full md:w-90 lg:w-100 border-r border-border bg-card shrink-0`}
         >
           {/* Search and Filters */}
           <div className="p-4 border-b border-border space-y-3 bg-card">
@@ -1238,7 +1236,7 @@ function ClientsPage() {
       {/* CASE DETAILS DIALOG */}
       {selectedCase && (
         <Dialog open={caseDialogOpen} onOpenChange={setCaseDialogOpen}>
-          <DialogContent className="sm:max-w-[550px]">
+          <DialogContent className="sm:max-w-137.5">
             <DialogHeader>
               <div className="flex items-center justify-between pr-4">
                 <Badge
@@ -1373,7 +1371,7 @@ function ClientsPage() {
       {/* DOCUMENT PREVIEW DIALOG */}
       {selectedDoc && (
         <Dialog open={docDialogOpen} onOpenChange={setDocDialogOpen}>
-          <DialogContent className="sm:max-w-[620px]">
+          <DialogContent className="sm:max-w-155">
             <DialogHeader>
               <div className="flex items-center justify-between pr-4">
                 <Badge
@@ -1399,7 +1397,7 @@ function ClientsPage() {
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 File Content Preview (A4 Page)
               </p>
-              <div className="rounded-lg bg-slate-200/70 dark:bg-slate-900 border border-border max-h-[500px] overflow-y-auto p-6 flex flex-col items-center gap-6 shadow-inner">
+              <div className="rounded-lg bg-slate-200/70 dark:bg-slate-900 border border-border max-h-125 overflow-y-auto p-6 flex flex-col items-center gap-6 shadow-inner">
                 {getMockDocumentPages(selectedDoc.name, selectedDoc).map((pageText, index, arr) => {
                   const isPleading =
                     selectedDoc.name.toLowerCase().includes("complaint") ||
@@ -1412,7 +1410,7 @@ function ClientsPage() {
                   return (
                     <div
                       key={index}
-                      className="w-full max-w-[460px] min-h-[600px] bg-white text-slate-900 shadow-md border border-slate-200/80 relative select-text text-left flex flex-col justify-between overflow-hidden"
+                      className="w-full max-w-115 min-h-150 bg-white text-slate-900 shadow-md border border-slate-200/80 relative select-text text-left flex flex-col justify-between overflow-hidden"
                     >
                       {/* Pleading style: numbers 1 to 28 down the left side */}
                       {isPleading && (
@@ -1431,7 +1429,7 @@ function ClientsPage() {
 
                       {/* Page Content */}
                       <div
-                        className={`flex-1 pt-10 pb-8 ${isPleading ? "pl-12 pr-6 font-serif text-[10px] leading-[18px]" : "px-8 md:px-10 font-serif text-[10px] leading-relaxed"}`}
+                        className={`flex-1 pt-10 pb-8 ${isPleading ? "pl-12 pr-6 font-serif text-[10px] leading-4.5" : "px-8 md:px-10 font-serif text-[10px] leading-relaxed"}`}
                       >
                         {/* Letterhead / Header */}
                         {!isPleading && (
@@ -1458,7 +1456,7 @@ function ClientsPage() {
                       <div
                         className={`px-8 pb-3 flex justify-between items-center text-[7px] text-slate-400 font-sans border-t border-slate-50 pt-1.5 select-none ${isPleading ? "pl-12" : ""}`}
                       >
-                        <span className="truncate max-w-[180px]">{selectedDoc.name}</span>
+                        <span className="truncate max-w-45">{selectedDoc.name}</span>
                         <span>
                           Page {index + 1} of {arr.length}
                         </span>

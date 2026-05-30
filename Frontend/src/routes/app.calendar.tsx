@@ -760,7 +760,7 @@ function CalendarPage() {
 
                 {/* WEEK VIEW COLUMNS */}
                 {currentView === "week" && (
-                  <div className="h-full grid grid-cols-7 divide-x divide-border min-w-[700px] overflow-auto bg-card">
+                  <div className="h-full grid grid-cols-7 divide-x divide-border min-w-175 overflow-auto bg-card">
                     {weekDays.map((day, idx) => {
                       const dayStr = formatDateString(day);
                       const dayEvents = filteredEvents.filter((e) => e.date === dayStr);

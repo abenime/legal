@@ -562,7 +562,7 @@ function DocumentsPage() {
                       <div
                         className={`px-8 pb-3 flex justify-between items-center text-[7px] text-slate-400 font-sans border-t border-slate-50 pt-1.5 select-none ${isPleading ? "pl-12" : ""}`}
                       >
-                        <span className="truncate max-w-[180px]">{previewDoc.name}</span>
+                        <span className="truncate max-w-45">{previewDoc.name}</span>
                         <span>
                           Page {index + 1} of {arr.length}
                         </span>
