@@ -90,8 +90,8 @@ function AIPage() {
     try {
       const response = await api.askAI(userMessage);
       setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
-    } catch (error) {
-      toast.error("AI request failed. Please try again.");
+    } catch (error: any) {
+      toast.error(error.message || "AI request failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -132,8 +132,8 @@ function AIPage() {
     try {
       const response = await api.askAI(summaryPrompt);
       setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
-    } catch (error) {
-      toast.error("Summary generation failed.");
+    } catch (error: any) {
+      toast.error(error.message || "Summary generation failed.");
     } finally {
       setIsLoading(false);
     }

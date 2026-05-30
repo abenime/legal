@@ -289,13 +289,18 @@ Route::get('/ai-debug', function() {
 
 Route::post('/ai-chat', function (Request $request) {
     $prompt = $request->input('prompt');
+    
+    if (!$prompt) {
+        return response()->json(['error' => 'Prompt is required'], 400);
+    }
+
     $apiKey = env('GEMINI_API_KEY');
     
     if (!$apiKey) {
         return response()->json(['error' => 'Gemini API key not configured'], 500);
     }
 
-    $url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
+    $url = "https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=" . $apiKey;
     
     try {
         $response = Http::asJson()->post($url, [

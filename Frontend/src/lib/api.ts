@@ -122,7 +122,16 @@ const fetchApi = async <T>(url: string, options?: RequestInit): Promise<T> => {
   });
   if (!response.ok) {
     if (response.status === 401) return null as T;
-    throw new Error(`API error: ${response.statusText}`);
+    
+    let errorDetail = response.statusText;
+    try {
+      const errorJson = await response.json();
+      errorDetail = errorJson.error || errorJson.message || response.statusText;
+    } catch (e) {
+      // Fallback to statusText if JSON parsing fails
+    }
+    
+    throw new Error(errorDetail);
   }
   return response.json();
 };
