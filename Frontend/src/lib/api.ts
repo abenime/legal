@@ -105,12 +105,18 @@ export interface Analytics {
 }
 
 const fetchApi = async <T>(url: string, options?: RequestInit): Promise<T> => {
+  const isFormData = options?.body instanceof FormData;
+  const headers: HeadersInit = {
+    ...options?.headers,
+  };
+
+  if (!isFormData && !headers["Content-Type" as keyof HeadersInit]) {
+    (headers as any)["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(`/api${url}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+    headers,
   });
   if (!response.ok) {
     if (response.status === 401) return null as T;
@@ -256,6 +262,24 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  // Settings
+  getSettings: () => fetchApi<Record<string, any>>("/settings"),
+  updateSettings: (data: Record<string, any>) =>
+    fetchApi<Record<string, any>>("/settings", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  uploadLogo: (file: File) => {
+    const formData = new FormData();
+    formData.append("logo", file);
+    return fetchApi<{ logo_path: string; logo_url: string }>("/settings/logo", {
+      method: "POST",
+      body: formData,
+      // fetchApi probably handles the headers but we should be careful about Content-Type
+      // usually for FormData, we want the browser to set it with the boundary.
+    });
+  },
 
   // Analytics — firm only
   getAnalytics: () => fetchApi<Analytics>("/analytics"),

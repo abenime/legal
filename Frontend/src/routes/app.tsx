@@ -17,6 +17,8 @@ import {
   Search,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useApi } from "@/lib/use-api";
+import { api } from "@/lib/api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -173,11 +175,19 @@ const NAV: NavItem[] = [
     roles: ["admin", "lawyer", "paralegal"],
     group: "System",
   },
-  { to: "/app/settings", label: "Settings", icon: Settings, roles: ["admin"], group: "System" },
+  {
+    to: "/app/users",
+    label: "User Management",
+    icon: Users,
+    roles: ["admin"],
+    group: "System",
+  },
+  { to: "/app/settings", label: "Firm Settings", icon: Settings, roles: ["admin"], group: "System" },
 ];
 
 function AppLayout() {
   const { user, status, logout, isClient } = useAuth();
+  const { data: settings } = useApi(() => api.getSettings(), []);
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -211,12 +221,16 @@ function AppLayout() {
       {/* Sidebar */}
       <aside className="hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm lg:flex">
         <div className="flex h-16 items-center gap-3 px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground shadow-sm">
-            <Scale className="h-5 w-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground shadow-sm overflow-hidden">
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="Logo" className="h-full w-full object-contain" />
+            ) : (
+              <Scale className="h-5 w-5" />
+            )}
           </div>
-          <div className="flex flex-col">
-            <span className="text-base font-bold tracking-tight text-sidebar-foreground">
-              Vance & Hale
+          <div className="flex flex-col min-w-0">
+            <span className="text-base font-bold tracking-tight text-sidebar-foreground truncate">
+              {settings?.firmName || "Vance & Hale"}
             </span>
             <span className="text-[10px] font-medium uppercase tracking-widest text-sidebar-foreground/50">
               {isClient ? "Client Portal" : "Legal Workspace"}

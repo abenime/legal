@@ -193,6 +193,46 @@ Route::post('/messages', function (Request $request) {
     return response()->json($data, 201);
 });
 
+// Settings
+Route::get('/settings', function () {
+    $settings = DB::table('settings')->pluck('value', 'key');
+    if (isset($settings['logo_path'])) {
+        $settings['logo_url'] = asset('storage/' . $settings['logo_path']);
+    }
+    return response()->json($settings);
+});
+
+Route::post('/settings', function (Request $request) {
+    $data = $request->all();
+    foreach ($data as $key => $value) {
+        if (is_array($value)) {
+            $value = json_encode($value);
+        }
+        DB::table('settings')->updateOrInsert(
+            ['key' => $key],
+            ['value' => $value, 'updated_at' => now()]
+        );
+    }
+    return response()->json(DB::table('settings')->pluck('value', 'key'));
+});
+
+Route::post('/settings/logo', function (Request $request) {
+    if ($request->hasFile('logo')) {
+        $path = $request->file('logo')->store('company', 'public');
+        
+        DB::table('settings')->updateOrInsert(
+            ['key' => 'logo_path'],
+            ['value' => $path, 'updated_at' => now()]
+        );
+
+        return response()->json([
+            'logo_path' => $path,
+            'logo_url' => asset('storage/' . $path)
+        ]);
+    }
+    return response()->json(['error' => 'No file uploaded'], 400);
+});
+
 // Analytics
 Route::get('/analytics', function () {
     return response()->json([

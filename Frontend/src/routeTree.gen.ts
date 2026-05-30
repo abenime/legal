@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppUsersRouteImport } from './routes/app.users'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppMessagesRouteImport } from './routes/app.messages'
 import { Route as AppDocumentsRouteImport } from './routes/app.documents'
@@ -47,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUsersRoute = AppUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/app/documents': typeof AppDocumentsRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/users': typeof AppUsersRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/app/documents': typeof AppDocumentsRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/users': typeof AppUsersRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/app/documents': typeof AppDocumentsRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/users': typeof AppUsersRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/app/documents'
     | '/app/messages'
     | '/app/settings'
+    | '/app/users'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/app/documents'
     | '/app/messages'
     | '/app/settings'
+    | '/app/users'
     | '/app'
   id:
     | '__root__'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/app/documents'
     | '/app/messages'
     | '/app/settings'
+    | '/app/users'
     | '/app/'
   fileRoutesById: FileRoutesById
 }
@@ -235,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/users': {
+      id: '/app/users'
+      path: '/users'
+      fullPath: '/app/users'
+      preLoaderRoute: typeof AppUsersRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/settings': {
@@ -313,6 +332,7 @@ interface AppRouteChildren {
   AppDocumentsRoute: typeof AppDocumentsRoute
   AppMessagesRoute: typeof AppMessagesRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppUsersRoute: typeof AppUsersRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -326,6 +346,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDocumentsRoute: AppDocumentsRoute,
   AppMessagesRoute: AppMessagesRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppUsersRoute: AppUsersRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
