@@ -140,7 +140,9 @@ const fetchApi = async <T>(url: string, options?: RequestInit): Promise<T> => {
               .find((message) => Boolean(message))
           : undefined;
 
-        throw new Error(firstValidationError ?? payload.message ?? payload.error ?? response.statusText);
+        throw new Error(
+          firstValidationError ?? payload.message ?? payload.error ?? response.statusText,
+        );
       } catch {
         throw new Error(`API error: ${response.statusText}`);
       }
@@ -329,6 +331,17 @@ export const api = {
     }),
 
   getAIHistory: (userId: string) => fetchApi<any[]>(`/ai-history/${userId}`),
+
+  reviewContract: (file: File, userId: string, caseId?: string) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("userId", userId);
+    if (caseId) formData.append("caseId", caseId);
+    return fetchApi<{ text: string }>("/ai-review", {
+      method: "POST",
+      body: formData,
+    });
+  },
 
   // Analytics — firm only
   getAnalytics: () => fetchApi<Analytics>("/analytics"),

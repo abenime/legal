@@ -114,7 +114,7 @@ function CaseDetailsLayout() {
             </p>
           </div>
         </div>
-        
+
         {user?.role !== "client" && (
           <Dialog open={isEditing} onOpenChange={setIsEditing}>
             <DialogTrigger asChild>
@@ -130,18 +130,18 @@ function CaseDetailsLayout() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="title">Case Title</Label>
-                    <Input 
-                      id="title" 
-                      value={editedCase.title || ""} 
-                      onChange={(e) => setEditedCase({...editedCase, title: e.target.value})}
+                    <Input
+                      id="title"
+                      value={editedCase.title || ""}
+                      onChange={(e) => setEditedCase({ ...editedCase, title: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="practice">Practice Area</Label>
-                    <Input 
-                      id="practice" 
-                      value={editedCase.practice || ""} 
-                      onChange={(e) => setEditedCase({...editedCase, practice: e.target.value})}
+                    <Input
+                      id="practice"
+                      value={editedCase.practice || ""}
+                      onChange={(e) => setEditedCase({ ...editedCase, practice: e.target.value })}
                     />
                   </div>
                 </div>
@@ -149,28 +149,28 @@ function CaseDetailsLayout() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="court">Court</Label>
-                    <Input 
-                      id="court" 
-                      value={editedCase.court || ""} 
-                      onChange={(e) => setEditedCase({...editedCase, court: e.target.value})}
+                    <Input
+                      id="court"
+                      value={editedCase.court || ""}
+                      onChange={(e) => setEditedCase({ ...editedCase, court: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="judge">Judge</Label>
-                    <Input 
-                      id="judge" 
-                      value={editedCase.judge || ""} 
-                      onChange={(e) => setEditedCase({...editedCase, judge: e.target.value})}
+                    <Input
+                      id="judge"
+                      value={editedCase.judge || ""}
+                      onChange={(e) => setEditedCase({ ...editedCase, judge: e.target.value })}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea 
-                    id="description" 
-                    value={editedCase.description || ""} 
-                    onChange={(e) => setEditedCase({...editedCase, description: e.target.value})}
+                  <Textarea
+                    id="description"
+                    value={editedCase.description || ""}
+                    onChange={(e) => setEditedCase({ ...editedCase, description: e.target.value })}
                     placeholder="General overview of the case..."
                     className="min-h-[100px]"
                   />
@@ -180,26 +180,58 @@ function CaseDetailsLayout() {
                   <Label className="text-base">Custom Details</Label>
                   <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
                     <div className="space-y-1">
-                      <Label htmlFor="key" className="text-[10px] uppercase text-muted-foreground">Label</Label>
-                      <Input id="key" value={newDetailKey} onChange={(e) => setNewDetailKey(e.target.value)} placeholder="e.g. Opposing Counsel" />
+                      <Label htmlFor="key" className="text-[10px] uppercase text-muted-foreground">
+                        Label
+                      </Label>
+                      <Input
+                        id="key"
+                        value={newDetailKey}
+                        onChange={(e) => setNewDetailKey(e.target.value)}
+                        placeholder="e.g. Opposing Counsel"
+                      />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="value" className="text-[10px] uppercase text-muted-foreground">Value</Label>
-                      <Input id="value" value={newDetailValue} onChange={(e) => setNewDetailValue(e.target.value)} placeholder="e.g. John Doe, Esq." />
+                      <Label
+                        htmlFor="value"
+                        className="text-[10px] uppercase text-muted-foreground"
+                      >
+                        Value
+                      </Label>
+                      <Input
+                        id="value"
+                        value={newDetailValue}
+                        onChange={(e) => setNewDetailValue(e.target.value)}
+                        placeholder="e.g. John Doe, Esq."
+                      />
                     </div>
-                    <Button type="button" size="icon" onClick={addDetail} disabled={!newDetailKey || !newDetailValue}>
+                    <Button
+                      type="button"
+                      size="icon"
+                      onClick={addDetail}
+                      disabled={!newDetailKey || !newDetailValue}
+                    >
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
 
                   <div className="space-y-2">
                     {Object.entries(editedCase.details || {}).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between p-2 rounded-md bg-muted/50 border border-border">
+                      <div
+                        key={key}
+                        className="flex items-center justify-between p-2 rounded-md bg-muted/50 border border-border"
+                      >
                         <div className="flex flex-col">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground leading-none mb-1">{key}</span>
+                          <span className="text-[10px] uppercase font-bold text-muted-foreground leading-none mb-1">
+                            {key}
+                          </span>
                           <span className="text-sm">{value}</span>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeDetail(key)} className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeDetail(key)}
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
@@ -208,7 +240,9 @@ function CaseDetailsLayout() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                <Button variant="outline" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </Button>
                 <Button onClick={handleSave} className="bg-success hover:bg-success/90">
                   <Save className="h-4 w-4 mr-2" /> Save Changes
                 </Button>
@@ -244,7 +278,7 @@ function CaseDetailsLayout() {
                       <FileText className="h-4 w-4 text-primary" />
                       Case Information
                     </h2>
-                    
+
                     {caseData.description && (
                       <div className="mb-6">
                         <p className="text-muted-foreground mb-2 text-xs uppercase tracking-wider font-bold">
@@ -279,7 +313,7 @@ function CaseDetailsLayout() {
                         </p>
                         <p className="font-medium capitalize">{caseData.priority}</p>
                       </div>
-                      
+
                       {Object.entries(caseData.details || {}).map(([key, value]) => (
                         <div key={key}>
                           <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider font-bold">
@@ -363,4 +397,3 @@ function CaseDetailsLayout() {
     </div>
   );
 }
-

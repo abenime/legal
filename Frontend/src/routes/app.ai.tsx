@@ -93,7 +93,10 @@ function AIPage() {
   const [summaryCase, setSummaryCase] = useState("");
   const [summaryFocus, setSummaryFocus] = useState("");
 
+  const [reviewFile, setReviewFile] = useState<File | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -121,13 +124,14 @@ function AIPage() {
 
   const handleDrafting = async () => {
     if (!draftCase || !draftTemplate) return;
-    
-    const selectedCase = cases?.find(c => c.id === draftCase);
+
+    const selectedCase = cases?.find((c) => c.id === draftCase);
     const customDetails = Object.entries(selectedCase?.details || {})
       .map(([key, value]) => `- ${key}: ${value}`)
       .join("\n");
 
-    const caseContext = selectedCase ? `
+    const caseContext = selectedCase
+      ? `
 Case Details:
 - Title: ${selectedCase.title}
 - Matter Number: ${selectedCase.number}
@@ -140,7 +144,8 @@ Case Details:
 - Priority: ${selectedCase.priority}
 - Description: ${selectedCase.description || "No description provided."}
 ${customDetails ? `\nAdditional Case Context:\n${customDetails}` : ""}
-` : "No case context provided.";
+`
+      : "No case context provided.";
 
     const draftingPrompt = `I need you to draft a ${draftTemplate}.
 
@@ -150,7 +155,10 @@ Additional instructions from the user: ${draftInstructions || "None provided."}
 
 Please provide the draft in a professional legal format using Markdown for structure.`;
 
-    setMessages((prev) => [...prev, { role: "user", text: `Draft a ${draftTemplate} for case ${selectedCase?.title}` }]);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", text: `Draft a ${draftTemplate} for case ${selectedCase?.title}` },
+    ]);
     setActiveTool("chat");
     setIsLoading(true);
 
@@ -172,7 +180,8 @@ Please provide the draft in a professional legal format using Markdown for struc
       .map(([key, value]) => `- ${key}: ${value}`)
       .join("\n");
 
-    const caseContext = selectedCase ? `
+    const caseContext = selectedCase
+      ? `
 Case Details:
 - Title: ${selectedCase.title}
 - Matter Number: ${selectedCase.number}
@@ -187,7 +196,8 @@ Case Details:
 - Next Deadline: ${selectedCase.nextDeadline || "None scheduled"}
 - Description: ${selectedCase.description || "No description provided."}
 ${customDetails ? `\nAdditional Case Context:\n${customDetails}` : ""}
-` : "No case context provided.";
+`
+      : "No case context provided.";
 
     const summaryPrompt = `Provide a comprehensive executive summary for the following case.
 
@@ -197,7 +207,10 @@ Focus area for the summary: ${summaryFocus || "General overview, procedural hist
 
 Use Markdown for a clear, professional presentation.`;
 
-    setMessages((prev) => [...prev, { role: "user", text: `Generate summary for case ${selectedCase?.title}` }]);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", text: `Generate summary for case ${selectedCase?.title}` },
+    ]);
     setActiveTool("chat");
     setIsLoading(true);
 
@@ -212,19 +225,29 @@ Use Markdown for a clear, professional presentation.`;
   };
 
   const handleReview = async () => {
-    const reviewPrompt = "Review the provided contract (simulated context) and highlight three major risks and two key provisions regarding governing law and payment terms. Format the response clearly using Markdown.";
+    if (!reviewFile) return;
 
-    setMessages((prev) => [...prev, { role: "user", text: "Please review this contract for risks and provisions." }]);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", text: `Please review the contract: ${reviewFile.name}` },
+    ]);
     setActiveTool("chat");
     setIsLoading(true);
 
     try {
-      const response = await api.askAI(reviewPrompt, user?.id);
+      const response = await api.reviewContract(reviewFile, user!.id);
       setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
+      setReviewFile(null); // Clear after review
     } catch (error: any) {
       toast.error(error.message || "Review failed.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setReviewFile(e.target.files[0]);
     }
   };
 
@@ -268,24 +291,31 @@ Use Markdown for a clear, professional presentation.`;
             <div className="mx-auto max-w-3xl space-y-6 flex flex-col h-full">
               <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pb-4">
                 {messages.length === 0 && (
-                   <div className="text-center py-12">
-                      <Sparkles className="h-12 w-12 text-accent/20 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-foreground">Start a legal consultation</h3>
-                      <p className="text-sm text-muted-foreground">Ask questions about cases, law, or draft documents.</p>
-                   </div>
+                  <div className="text-center py-12">
+                    <Sparkles className="h-12 w-12 text-accent/20 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground">
+                      Start a legal consultation
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Ask questions about cases, law, or draft documents.
+                    </p>
+                  </div>
                 )}
                 {messages.map((m, i) => (
-                  <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] rounded-2xl p-4 text-sm ${
-                      m.role === "user" 
-                        ? "bg-primary text-primary-foreground rounded-tr-none" 
-                        : "bg-card border border-border text-foreground rounded-tl-none"
-                    }`}>
+                  <div
+                    key={i}
+                    className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl p-4 text-sm ${
+                        m.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-tr-none"
+                          : "bg-card border border-border text-foreground rounded-tl-none"
+                      }`}
+                    >
                       {m.role === "ai" ? (
                         <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-p:leading-relaxed prose-pre:bg-muted prose-pre:p-3 prose-pre:rounded-md">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {m.text}
-                          </ReactMarkdown>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
                         </div>
                       ) : (
                         <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
@@ -294,11 +324,11 @@ Use Markdown for a clear, professional presentation.`;
                   </div>
                 ))}
                 {isLoading && (
-                   <div className="flex justify-start">
-                     <div className="bg-card border border-border text-foreground rounded-2xl rounded-tl-none p-4 text-sm animate-pulse">
-                        Thinking...
-                     </div>
-                   </div>
+                  <div className="flex justify-start">
+                    <div className="bg-card border border-border text-foreground rounded-2xl rounded-tl-none p-4 text-sm animate-pulse">
+                      Thinking...
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -310,14 +340,14 @@ Use Markdown for a clear, professional presentation.`;
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     onKeyDown={(e) => {
-                       if (e.key === 'Enter' && !e.shiftKey) {
-                         e.preventDefault();
-                         handleAskAI();
-                       }
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleAskAI();
+                      }
                     }}
                   />
-                  <Button 
-                    className="self-end h-10 w-10 p-0 rounded-full" 
+                  <Button
+                    className="self-end h-10 w-10 p-0 rounded-full"
                     onClick={handleAskAI}
                     disabled={isLoading || !prompt.trim()}
                   >
@@ -375,7 +405,10 @@ Use Markdown for a clear, professional presentation.`;
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <Button disabled={!draftCase || !draftTemplate || isLoading} onClick={handleDrafting}>
+                  <Button
+                    disabled={!draftCase || !draftTemplate || isLoading}
+                    onClick={handleDrafting}
+                  >
                     <Sparkles className="mr-2 h-4 w-4" /> Generate Draft
                   </Button>
                 </div>
@@ -389,36 +422,58 @@ Use Markdown for a clear, professional presentation.`;
                 <Scale className="h-6 w-6 text-accent" /> Contract Review
               </h2>
               <div className="grid gap-6 md:grid-cols-2">
-                <div 
-                   className="rounded-lg border-2 border-dashed border-border p-8 text-center flex flex-col items-center justify-center bg-card hover:bg-secondary/20 transition-colors cursor-pointer"
-                   onClick={handleReview}
+                <div
+                  className="rounded-lg border-2 border-dashed border-border p-8 text-center flex flex-col items-center justify-center bg-card hover:bg-secondary/20 transition-colors cursor-pointer relative"
+                  onClick={() => fileInputRef.current?.click()}
                 >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept=".pdf"
+                    onChange={handleFileChange}
+                    disabled={isLoading}
+                  />
                   <Upload className="h-10 w-10 text-muted-foreground mb-4" />
-                  <h3 className="font-medium">Upload Document</h3>
+                  <h3 className="font-medium">
+                    {reviewFile ? reviewFile.name : "Upload Contract (PDF)"}
+                  </h3>
                   <p className="text-sm text-muted-foreground mt-1 mb-4">
-                    Drag and drop or click to browse
+                    {reviewFile
+                      ? `${(reviewFile.size / 1024 / 1024).toFixed(2)} MB`
+                      : "Drag and drop or click to browse"}
                   </p>
-                  <Button variant="outline" size="sm" disabled={isLoading}>
-                    {isLoading ? "Processing..." : "Select File"}
+                  <Button
+                    variant={reviewFile ? "default" : "outline"}
+                    size="sm"
+                    disabled={isLoading || !reviewFile}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReview();
+                    }}
+                    className="relative z-10"
+                  >
+                    {isLoading ? "Processing..." : reviewFile ? "Start AI Review" : "Select File"}
                   </Button>
                 </div>
 
                 <div className="space-y-4">
                   <div className="rounded-lg border border-border bg-card p-4">
                     <h3 className="font-medium flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-warning" /> Flagged Risks (0)
+                      <AlertTriangle className="h-4 w-4 text-warning" /> AI Risk Analysis
                     </h3>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Upload a document to scan for unfavorable terms, missing standard clauses, and
-                      liability issues.
+                      Upload a PDF contract to automatically scan for unfavorable terms, liability
+                      issues, and missing clauses.
                     </p>
                   </div>
                   <div className="rounded-lg border border-border bg-card p-4">
                     <h3 className="font-medium flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-success" /> Key Provisions (0)
+                      <CheckCircle2 className="h-4 w-4 text-success" /> Provision Extraction
                     </h3>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Automatically extract governing law, term length, and payment schedules.
+                      Automatically identify governing law, payment terms, and key deadlines from
+                      your documents.
                     </p>
                   </div>
                 </div>
@@ -449,8 +504,8 @@ Use Markdown for a clear, professional presentation.`;
                 </div>
                 <div className="grid gap-2">
                   <Label>Focus Area (Optional)</Label>
-                  <Input 
-                    placeholder="e.g. Focus on procedural history and upcoming deadlines" 
+                  <Input
+                    placeholder="e.g. Focus on procedural history and upcoming deadlines"
                     value={summaryFocus}
                     onChange={(e) => setSummaryFocus(e.target.value)}
                   />

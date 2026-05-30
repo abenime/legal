@@ -151,9 +151,9 @@ function DocumentsPage() {
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    noClick: true
+    noClick: true,
   });
 
   // Group documents by caseId for folders
@@ -202,10 +202,10 @@ function DocumentsPage() {
             <div className="relative">
               <Button disabled={uploading}>
                 <Upload className="mr-2 h-4 w-4" /> {uploading ? "Uploading..." : "Upload"}
-                <input 
-                  type="file" 
-                  multiple 
-                  className="absolute inset-0 opacity-0 cursor-pointer" 
+                <input
+                  type="file"
+                  multiple
+                  className="absolute inset-0 opacity-0 cursor-pointer"
                   onChange={handleFileUpload}
                   disabled={uploading}
                 />

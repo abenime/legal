@@ -415,7 +415,7 @@ Route::post('/ai-chat', function (Request $request) {
         // Save user message if userId is provided
         if ($userId) {
             DB::table('messages')->insert([
-                'id' => 'm-' . time() . '-' . uniqid(),
+                'id' => (string) Str::uuid(),
                 'from' => $userId,
                 'to' => 'AI_ASSISTANT',
                 'body' => $prompt,
@@ -452,7 +452,7 @@ Route::post('/ai-chat', function (Request $request) {
         // Save AI response if userId is provided
         if ($userId) {
             DB::table('messages')->insert([
-                'id' => 'm-' . time() . '-' . uniqid(),
+                'id' => (string) Str::uuid(),
                 'from' => 'AI_ASSISTANT',
                 'to' => $userId,
                 'body' => $text,
@@ -485,6 +485,95 @@ Route::get('/ai-history/{userId}', function ($userId) {
         ->get();
     
     return response()->json($messages);
+});
+
+Route::post('/ai-review', function (Request $request) {
+    if (!$request->hasFile('file')) {
+        return response()->json(['error' => 'No file uploaded'], 400);
+    }
+
+    $file = $request->file('file');
+    $userId = $request->input('userId');
+    $caseId = $request->input('caseId', 'GENERAL_REVIEW');
+
+    try {
+        $parser = new \Smalot\PdfParser\Parser();
+        $pdf = $parser->parseFile($file->getPathname());
+        $text = $pdf->getText();
+
+        if (empty(trim($text))) {
+            return response()->json(['error' => 'Could not extract text from PDF'], 422);
+        }
+
+        $apiKey = env('GEMINI_API_KEY');
+        if (!$apiKey) {
+            return response()->json(['error' => 'Gemini API key not configured'], 500);
+        }
+
+        $url = "https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=" . $apiKey;
+        
+        $prompt = "Review the following contract and highlight three major risks and two key provisions regarding governing law and payment terms. Format the response clearly using Markdown.\n\nCONTRACT TEXT:\n" . $text;
+
+        // Save user message (simulated for history)
+        if ($userId) {
+            DB::table('messages')->insert([
+                'id' => (string) Str::uuid(),
+                'from' => $userId,
+                'to' => 'AI_ASSISTANT',
+                'body' => "Please review the uploaded contract: " . $file->getClientOriginalName(),
+                'caseId' => 'AI_CHAT',
+                'fromName' => 'You',
+                'at' => now(),
+                'read' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $response = Http::asJson()->post($url, [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $prompt]
+                    ]
+                ]
+            ]
+        ]);
+
+        if ($response->failed()) {
+            return response()->json([
+                'error' => 'AI request failed',
+                'status' => $response->status(),
+                'details' => $response->json(),
+            ], $response->status());
+        }
+
+        $data = $response->json();
+        $aiText = $data['candidates'][0]['content']['parts'][0]['text'] ?? 'No response from AI.';
+
+        // Save AI response
+        if ($userId) {
+            DB::table('messages')->insert([
+                'id' => (string) Str::uuid(),
+                'from' => 'AI_ASSISTANT',
+                'to' => $userId,
+                'body' => $aiText,
+                'caseId' => 'AI_CHAT',
+                'fromName' => 'AI Assistant',
+                'at' => now(),
+                'read' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json(['text' => $aiText]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Review failed',
+            'message' => $e->getMessage()
+        ], 500);
+    }
 });
 
 // Analytics

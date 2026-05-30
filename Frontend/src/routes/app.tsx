@@ -226,25 +226,25 @@ function AppLayout() {
     <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* Sidebar */}
       <aside className="hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm lg:flex h-full">
-        <div className="flex h-16 items-center gap-3 px-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground shadow-sm overflow-hidden">
+        <div className="flex flex-col items-center gap-3 px-6 py-8">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-transparent overflow-hidden border border-sidebar-border/20 shadow-sm">
             {settings?.logo_url ? (
               <img src={settings.logo_url} alt="Logo" className="h-full w-full object-contain" />
             ) : (
-              <Scale className="h-5 w-5" />
+              <Scale className="h-10 w-10 text-accent" />
             )}
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-base font-bold tracking-tight text-sidebar-foreground truncate">
+          <div className="flex flex-col items-center text-center min-w-0">
+            <span className="text-lg font-bold tracking-tight text-sidebar-foreground">
               {settings?.firmName || "Vance & Hale"}
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-widest text-sidebar-foreground/50">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/50 mt-1">
               {isClient ? "Client Portal" : "Legal Workspace"}
             </span>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-6 px-4 py-6 overflow-y-auto scrollbar-none">
+        <nav className="flex-1 space-y-6 px-4 py-2 overflow-y-auto scrollbar-none">
           {Object.entries(groupedItems).map(([group, groupItems]) => (
             <div key={group} className="space-y-1">
               <h4 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">

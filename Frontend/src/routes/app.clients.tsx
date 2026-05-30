@@ -73,18 +73,9 @@ function ClientsPage() {
     loading: clientsLoading,
     refresh: refreshClients,
   } = useApi(() => api.getClients(), []);
-  const { data: initialCases } = useApi(
-    () => api.getCases(user!),
-    [user?.id],
-  ); // Fetch cases for matching
-  const { data: initialInvoices } = useApi(
-    () => api.getInvoices(user!),
-    [user?.id],
-  ); // Fetch invoices for matching
-  const { data: initialDocuments } = useApi(
-    () => api.getDocuments(user!),
-    [user?.id],
-  ); // Fetch documents for matching
+  const { data: initialCases } = useApi(() => api.getCases(user!), [user?.id]); // Fetch cases for matching
+  const { data: initialInvoices } = useApi(() => api.getInvoices(user!), [user?.id]); // Fetch invoices for matching
+  const { data: initialDocuments } = useApi(() => api.getDocuments(user!), [user?.id]); // Fetch documents for matching
 
   const [clients, setClients] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
@@ -275,7 +266,8 @@ function ClientsPage() {
 
   console.log("CLIENT DATA", client, "NOTES TYPE", typeof client?.notes);
 
-  if (clientsLoading) return <div className="p-8 text-center text-muted-foreground">Loading clients...</div>;
+  if (clientsLoading)
+    return <div className="p-8 text-center text-muted-foreground">Loading clients...</div>;
 
   if (!client && !clientsLoading) {
     return (
@@ -294,7 +286,8 @@ function ClientsPage() {
                 <DialogHeader>
                   <DialogTitle>Add New Client</DialogTitle>
                   <DialogDescription>
-                    Enter client contact details and initial retainer balance to onboard a new client.
+                    Enter client contact details and initial retainer balance to onboard a new
+                    client.
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleAddClientSubmit} className="space-y-4 pt-2">
@@ -360,7 +353,9 @@ function ClientsPage() {
                       type="number"
                       placeholder="0.00"
                       value={formData.retainerBalance}
-                      onChange={(e) => setFormData({ ...formData, retainerBalance: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, retainerBalance: e.target.value })
+                      }
                     />
                   </div>
 
@@ -383,9 +378,11 @@ function ClientsPage() {
           }
         />
         <div className="p-12 text-center border-2 border-dashed m-6 rounded-xl bg-muted/10">
-           <Users className="h-12 w-12 mx-auto text-muted-foreground/20 mb-4" />
-           <p className="text-muted-foreground">No clients found in the directory.</p>
-           <p className="text-xs text-muted-foreground/60 mt-1">Add your first client using the button above.</p>
+          <Users className="h-12 w-12 mx-auto text-muted-foreground/20 mb-4" />
+          <p className="text-muted-foreground">No clients found in the directory.</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">
+            Add your first client using the button above.
+          </p>
         </div>
       </div>
     );
@@ -839,7 +836,10 @@ function ClientsPage() {
                                   <TableRow
                                     key={c.id}
                                     onClick={() => {
-                                      navigate({ to: "/app/cases/$caseId", params: { caseId: c.id } });
+                                      navigate({
+                                        to: "/app/cases/$caseId",
+                                        params: { caseId: c.id },
+                                      });
                                     }}
                                     className="cursor-pointer hover:bg-muted/60 transition-colors font-medium"
                                   >
@@ -908,7 +908,10 @@ function ClientsPage() {
                                   <TableRow
                                     key={doc.id}
                                     onClick={() => {
-                                      navigate({ to: "/app/cases/$caseId/documents", params: { caseId: doc.caseId } });
+                                      navigate({
+                                        to: "/app/cases/$caseId/documents",
+                                        params: { caseId: doc.caseId },
+                                      });
                                     }}
                                     className="cursor-pointer hover:bg-muted/60 transition-colors font-medium"
                                   >
