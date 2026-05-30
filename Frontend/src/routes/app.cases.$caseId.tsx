@@ -266,11 +266,19 @@ function CaseDetailsLayout() {
                   Documents
                 </Link>
               </TabsTrigger>
-              <TabsTrigger value="tasks">Tasks</TabsTrigger>
-              <TabsTrigger value="events">Calendar</TabsTrigger>
+              <TabsTrigger value="tasks" asChild>
+                <Link to="/app/cases/$caseId/tasks" params={{ caseId }}>
+                  Tasks
+                </Link>
+              </TabsTrigger>
+              <TabsTrigger value="events" asChild>
+                <Link to="/app/cases/$caseId/events" params={{ caseId }}>
+                  Calendar
+                </Link>
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
+            <TabsContent value="overview" className="space-y-6 outline-none">
               <div className="grid gap-6 md:grid-cols-3">
                 <div className="md:col-span-2 space-y-6">
                   <div className="bg-card border border-border rounded-xl p-6">
@@ -388,7 +396,13 @@ function CaseDetailsLayout() {
               </div>
             </TabsContent>
 
-            <TabsContent value="documents">
+            <TabsContent value="documents" className="outline-none">
+              <Outlet />
+            </TabsContent>
+            <TabsContent value="tasks" className="outline-none">
+              <Outlet />
+            </TabsContent>
+            <TabsContent value="events" className="outline-none">
               <Outlet />
             </TabsContent>
           </Tabs>

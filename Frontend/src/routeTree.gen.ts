@@ -26,6 +26,8 @@ import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiRouteImport } from './routes/app.ai'
 import { Route as AppCasesIndexRouteImport } from './routes/app.cases.index'
 import { Route as AppCasesCaseIdRouteImport } from './routes/app.cases.$caseId'
+import { Route as AppCasesCaseIdTasksRouteImport } from './routes/app.cases.$caseId.tasks'
+import { Route as AppCasesCaseIdEventsRouteImport } from './routes/app.cases.$caseId.events'
 import { Route as AppCasesCaseIdDocumentsRouteImport } from './routes/app.cases.$caseId.documents'
 
 const SignupRoute = SignupRouteImport.update({
@@ -113,6 +115,16 @@ const AppCasesCaseIdRoute = AppCasesCaseIdRouteImport.update({
   path: '/$caseId',
   getParentRoute: () => AppCasesRoute,
 } as any)
+const AppCasesCaseIdTasksRoute = AppCasesCaseIdTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AppCasesCaseIdRoute,
+} as any)
+const AppCasesCaseIdEventsRoute = AppCasesCaseIdEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => AppCasesCaseIdRoute,
+} as any)
 const AppCasesCaseIdDocumentsRoute = AppCasesCaseIdDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -138,6 +150,8 @@ export interface FileRoutesByFullPath {
   '/app/cases/$caseId': typeof AppCasesCaseIdRouteWithChildren
   '/app/cases/': typeof AppCasesIndexRoute
   '/app/cases/$caseId/documents': typeof AppCasesCaseIdDocumentsRoute
+  '/app/cases/$caseId/events': typeof AppCasesCaseIdEventsRoute
+  '/app/cases/$caseId/tasks': typeof AppCasesCaseIdTasksRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -156,6 +170,8 @@ export interface FileRoutesByTo {
   '/app/cases/$caseId': typeof AppCasesCaseIdRouteWithChildren
   '/app/cases': typeof AppCasesIndexRoute
   '/app/cases/$caseId/documents': typeof AppCasesCaseIdDocumentsRoute
+  '/app/cases/$caseId/events': typeof AppCasesCaseIdEventsRoute
+  '/app/cases/$caseId/tasks': typeof AppCasesCaseIdTasksRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -177,6 +193,8 @@ export interface FileRoutesById {
   '/app/cases/$caseId': typeof AppCasesCaseIdRouteWithChildren
   '/app/cases/': typeof AppCasesIndexRoute
   '/app/cases/$caseId/documents': typeof AppCasesCaseIdDocumentsRoute
+  '/app/cases/$caseId/events': typeof AppCasesCaseIdEventsRoute
+  '/app/cases/$caseId/tasks': typeof AppCasesCaseIdTasksRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -199,6 +217,8 @@ export interface FileRouteTypes {
     | '/app/cases/$caseId'
     | '/app/cases/'
     | '/app/cases/$caseId/documents'
+    | '/app/cases/$caseId/events'
+    | '/app/cases/$caseId/tasks'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -217,6 +237,8 @@ export interface FileRouteTypes {
     | '/app/cases/$caseId'
     | '/app/cases'
     | '/app/cases/$caseId/documents'
+    | '/app/cases/$caseId/events'
+    | '/app/cases/$caseId/tasks'
   id:
     | '__root__'
     | '/'
@@ -237,6 +259,8 @@ export interface FileRouteTypes {
     | '/app/cases/$caseId'
     | '/app/cases/'
     | '/app/cases/$caseId/documents'
+    | '/app/cases/$caseId/events'
+    | '/app/cases/$caseId/tasks'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -367,6 +391,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCasesCaseIdRouteImport
       parentRoute: typeof AppCasesRoute
     }
+    '/app/cases/$caseId/tasks': {
+      id: '/app/cases/$caseId/tasks'
+      path: '/tasks'
+      fullPath: '/app/cases/$caseId/tasks'
+      preLoaderRoute: typeof AppCasesCaseIdTasksRouteImport
+      parentRoute: typeof AppCasesCaseIdRoute
+    }
+    '/app/cases/$caseId/events': {
+      id: '/app/cases/$caseId/events'
+      path: '/events'
+      fullPath: '/app/cases/$caseId/events'
+      preLoaderRoute: typeof AppCasesCaseIdEventsRouteImport
+      parentRoute: typeof AppCasesCaseIdRoute
+    }
     '/app/cases/$caseId/documents': {
       id: '/app/cases/$caseId/documents'
       path: '/documents'
@@ -379,10 +417,14 @@ declare module '@tanstack/react-router' {
 
 interface AppCasesCaseIdRouteChildren {
   AppCasesCaseIdDocumentsRoute: typeof AppCasesCaseIdDocumentsRoute
+  AppCasesCaseIdEventsRoute: typeof AppCasesCaseIdEventsRoute
+  AppCasesCaseIdTasksRoute: typeof AppCasesCaseIdTasksRoute
 }
 
 const AppCasesCaseIdRouteChildren: AppCasesCaseIdRouteChildren = {
   AppCasesCaseIdDocumentsRoute: AppCasesCaseIdDocumentsRoute,
+  AppCasesCaseIdEventsRoute: AppCasesCaseIdEventsRoute,
+  AppCasesCaseIdTasksRoute: AppCasesCaseIdTasksRoute,
 }
 
 const AppCasesCaseIdRouteWithChildren = AppCasesCaseIdRoute._addFileChildren(
