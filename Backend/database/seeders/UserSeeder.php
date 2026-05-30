@@ -68,5 +68,40 @@ class UserSeeder extends Seeder
         foreach ($users as $user) {
             DB::table('users')->insert($user);
         }
+
+        $clients = [
+            [
+                "id" => "cl_1",
+                "name" => "James Whitaker",
+                "email" => "client@firm.com",
+                "phone" => "+1 (555) 012-3456",
+                "company" => "Whitaker Capital",
+                "since" => "2024-01-15",
+                "activeCases" => 1,
+                "outstanding" => 1250.00,
+                "retainerBalance" => 5000.00,
+                "address" => "500 Sansome St, San Francisco, CA 94111",
+                "notes" => json_encode([])
+            ],
+            [
+                "id" => "cl_2",
+                "name" => "Ana Martinez",
+                "email" => "client2@firm.com",
+                "phone" => "+1 (555) 987-6543",
+                "company" => "Self-Employed",
+                "since" => "2024-03-22",
+                "activeCases" => 1,
+                "outstanding" => 0.00,
+                "retainerBalance" => 2500.00,
+                "address" => "123 Broadway, Oakland, CA 94612",
+                "notes" => json_encode([])
+            ]
+        ];
+
+        foreach ($clients as $client) {
+            $client['created_at'] = now();
+            $client['updated_at'] = now();
+            DB::table('clients')->insert($client);
+        }
     }
 }

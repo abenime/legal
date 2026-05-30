@@ -21,6 +21,7 @@ import {
   Gavel,
   Check,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import { useApi } from "@/lib/use-api";
 import { api } from "@/lib/api";
 import { PageHeader, statusColor } from "@/components/ui-shared";
@@ -65,22 +66,23 @@ export const Route = createFileRoute("/app/clients")({
 
 function ClientsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const {
     data: initialClients,
     loading: clientsLoading,
     refresh: refreshClients,
   } = useApi(() => api.getClients(), []);
   const { data: initialCases } = useApi(
-    () => api.getUsers().then((users) => api.getCases(users[0])),
-    [],
+    () => api.getCases(user!),
+    [user?.id],
   ); // Fetch cases for matching
   const { data: initialInvoices } = useApi(
-    () => api.getUsers().then((users) => api.getInvoices(users[0])),
-    [],
+    () => api.getInvoices(user!),
+    [user?.id],
   ); // Fetch invoices for matching
   const { data: initialDocuments } = useApi(
-    () => api.getUsers().then((users) => api.getDocuments(users[0])),
-    [],
+    () => api.getDocuments(user!),
+    [user?.id],
   ); // Fetch documents for matching
 
   const [clients, setClients] = useState<any[]>([]);
@@ -274,7 +276,121 @@ function ClientsPage() {
 
   console.log("CLIENT DATA", client, "NOTES TYPE", typeof client?.notes);
 
-  if (!client) return <div>Loading...</div>;
+  if (clientsLoading) return <div className="p-8 text-center text-muted-foreground">Loading clients...</div>;
+
+  if (!client && !clientsLoading) {
+    return (
+      <div className="flex h-full flex-col">
+        <PageHeader
+          title="CRM & Clients"
+          description="Manage client directory, track cases, communications, financials, and internal notes."
+          actions={
+            <Dialog open={addClientOpen} onOpenChange={setAddClientOpen}>
+              <DialogTrigger asChild>
+                <Button className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-medium">
+                  <Plus className="mr-2 h-4 w-4" /> Add client
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Client</DialogTitle>
+                  <DialogDescription>
+                    Enter client contact details and initial retainer balance to onboard a new client.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddClientSubmit} className="space-y-4 pt-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        placeholder="e.g. John Doe"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="company">Company</Label>
+                      <Input
+                        id="company"
+                        placeholder="e.g. Acme Corp (or Self)"
+                        value={formData.company}
+                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="e.g. john@example.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        placeholder="e.g. +1 (555) 000-0000"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="address">Physical Address</Label>
+                    <Input
+                      id="address"
+                      placeholder="Street, City, State, Zip"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="retainer">Initial Retainer Balance ($)</Label>
+                    <Input
+                      id="retainer"
+                      type="number"
+                      placeholder="0.00"
+                      value={formData.retainerBalance}
+                      onChange={(e) => setFormData({ ...formData, retainerBalance: e.target.value })}
+                    />
+                  </div>
+
+                  <DialogFooter className="pt-2">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => setAddClientOpen(false)}
+                      className="cursor-pointer"
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="cursor-pointer">
+                      Save Client
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          }
+        />
+        <div className="p-12 text-center border-2 border-dashed m-6 rounded-xl bg-muted/10">
+           <Users className="h-12 w-12 mx-auto text-muted-foreground/20 mb-4" />
+           <p className="text-muted-foreground">No clients found in the directory.</p>
+           <p className="text-xs text-muted-foreground/60 mt-1">Add your first client using the button above.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col">
