@@ -25,7 +25,10 @@ export const Route = createFileRoute("/app/messages")({
 
 function MessagesPage() {
   const { user } = useAuth();
-  const { data: messages, refresh: refreshMessages } = useApi(() => api.getMessages(user!), [user?.id]);
+  const { data: messages, refresh: refreshMessages } = useApi(
+    () => api.getMessages(user!),
+    [user?.id],
+  );
   const [activeCase, setActiveCase] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);

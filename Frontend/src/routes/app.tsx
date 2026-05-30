@@ -182,7 +182,13 @@ const NAV: NavItem[] = [
     roles: ["admin"],
     group: "System",
   },
-  { to: "/app/settings", label: "Firm Settings", icon: Settings, roles: ["admin"], group: "System" },
+  {
+    to: "/app/settings",
+    label: "Firm Settings",
+    icon: Settings,
+    roles: ["admin"],
+    group: "System",
+  },
 ];
 
 function AppLayout() {
@@ -192,10 +198,10 @@ function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
-    if (status === "unauthenticated" || (status !== "loading" && !user)) {
+    if (status === "unauthenticated") {
       navigate({ to: "/login" });
     }
-  }, [user, status, navigate]);
+  }, [status, navigate]);
 
   if (status === "loading" || !user) {
     return (

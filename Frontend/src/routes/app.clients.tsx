@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
   Plus,
@@ -64,7 +64,12 @@ export const Route = createFileRoute("/app/clients")({
 });
 
 function ClientsPage() {
-  const { data: initialClients, loading: clientsLoading, refresh: refreshClients } = useApi(() => api.getClients(), []);
+  const navigate = useNavigate();
+  const {
+    data: initialClients,
+    loading: clientsLoading,
+    refresh: refreshClients,
+  } = useApi(() => api.getClients(), []);
   const { data: initialCases } = useApi(
     () => api.getUsers().then((users) => api.getCases(users[0])),
     [],
@@ -719,8 +724,7 @@ function ClientsPage() {
                                   <TableRow
                                     key={c.id}
                                     onClick={() => {
-                                      setSelectedCase(c);
-                                      setCaseDialogOpen(true);
+                                      navigate({ to: "/app/cases/$caseId", params: { caseId: c.id } });
                                     }}
                                     className="cursor-pointer hover:bg-muted/60 transition-colors font-medium"
                                   >
@@ -789,8 +793,7 @@ function ClientsPage() {
                                   <TableRow
                                     key={doc.id}
                                     onClick={() => {
-                                      setSelectedDoc(doc);
-                                      setDocDialogOpen(true);
+                                      navigate({ to: "/app/cases/$caseId/documents", params: { caseId: doc.caseId } });
                                     }}
                                     className="cursor-pointer hover:bg-muted/60 transition-colors font-medium"
                                   >

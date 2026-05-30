@@ -201,8 +201,9 @@ export const api = {
     }),
 
   // Tasks
-  async getTasks(user: User) {
-    const all = await fetchApi<Task[]>("/tasks");
+  async getTasks(user: User, caseId?: string) {
+    const url = caseId ? `/tasks?caseId=${caseId}` : "/tasks";
+    const all = await fetchApi<Task[]>(url);
     if (user.role === "client") {
       const allowed = user.caseIds ?? [];
       return all.filter((t) => allowed.includes(t.caseId));
@@ -216,8 +217,9 @@ export const api = {
     }),
 
   // Events
-  async getEvents(user: User) {
-    const all = await fetchApi<Event[]>("/events");
+  async getEvents(user: User, caseId?: string) {
+    const url = caseId ? `/events?caseId=${caseId}` : "/events";
+    const all = await fetchApi<Event[]>(url);
     if (user.role === "client") {
       const allowed = user.caseIds ?? [];
       return all.filter((e) => allowed.includes(e.caseId));
@@ -231,14 +233,20 @@ export const api = {
     }),
 
   // Documents
-  async getDocuments(user: User) {
-    const all = await fetchApi<Document[]>("/documents");
+  async getDocuments(user: User, caseId?: string) {
+    const url = caseId ? `/documents?caseId=${caseId}` : "/documents";
+    const all = await fetchApi<Document[]>(url);
     if (user.role === "client") {
       const allowed = user.caseIds ?? [];
       return all.filter((d) => allowed.includes(d.caseId));
     }
     return all;
   },
+  createDocument: (data: Partial<Document>) =>
+    fetchApi<Document>("/documents", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   // Invoices
   async getInvoices(user: User) {

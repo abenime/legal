@@ -59,7 +59,10 @@ function SettingsPage() {
 
   return (
     <div className="pb-10">
-      <PageHeader title="Firm Profile" description="Manage your company public information and identity." />
+      <PageHeader
+        title="Firm Profile"
+        description="Manage your company public information and identity."
+      />
       <div className="p-6">
         <FirmDetailsTab />
       </div>
@@ -70,7 +73,7 @@ function SettingsPage() {
 function FirmDetailsTab() {
   const { data: settings, refresh } = useApi(() => api.getSettings(), []);
   const [isUploading, setIsUploading] = useState(false);
-  
+
   const defaultValues = {
     firmName: "Vance & Hale LLP",
     address: "123 Legal Plaza, Suite 500, New York, NY 10001",
@@ -137,7 +140,9 @@ function FirmDetailsTab() {
             {settings?.logo_url ? (
               <img src={settings.logo_url} alt="Logo" className="h-full w-full object-contain" />
             ) : (
-              <span className="text-[10px] text-muted-foreground text-center px-2">No logo uploaded</span>
+              <span className="text-[10px] text-muted-foreground text-center px-2">
+                No logo uploaded
+              </span>
             )}
           </div>
           <div className="flex flex-col gap-2">
@@ -162,10 +167,7 @@ function FirmDetailsTab() {
         </div>
       </div>
 
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid gap-6">
           <div className="space-y-2">
             <Label htmlFor="firmName">Firm name</Label>
@@ -177,7 +179,11 @@ function FirmDetailsTab() {
 
           <div className="space-y-2">
             <Label htmlFor="address">Business Address</Label>
-            <Input id="address" {...form.register("address")} placeholder="Full street address, city, state, zip" />
+            <Input
+              id="address"
+              {...form.register("address")}
+              placeholder="Full street address, city, state, zip"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

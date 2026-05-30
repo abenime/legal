@@ -72,7 +72,11 @@ const TYPE_META: Record<string, { icon: any; cls: string; pillCls: string; label
 
 function CalendarPage() {
   const { user, isClient } = useAuth();
-  const { data: initialEvents, loading, refresh: refreshEvents } = useApi(() => api.getEvents(user!), [user?.id]);
+  const {
+    data: initialEvents,
+    loading,
+    refresh: refreshEvents,
+  } = useApi(() => api.getEvents(user!), [user?.id]);
   const { data: initialCases } = useApi(
     () => api.getUsers().then((users) => api.getCases(users[0])),
     [],
@@ -80,8 +84,10 @@ function CalendarPage() {
   const { data: initialClients } = useApi(() => api.getClients(), []);
 
   const [events, setEvents] = useState<any[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2026, 5, 2)); // Start at June 2, 2026 for rich mock data
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2026, 5, 1)); // June 2026
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  );
   const [currentView, setCurrentView] = useState<"month" | "week" | "day" | "list">("month");
 
   // Event Filter Checkboxes
@@ -231,7 +237,7 @@ function CalendarPage() {
   };
 
   const handleToday = () => {
-    const today = new Date(2026, 5, 2); // Synced with mock dataset center date
+    const today = new Date();
     setSelectedDate(today);
     setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
   };
@@ -688,7 +694,7 @@ function CalendarPage() {
                       {monthGrid.map((cell, idx) => {
                         const cellDateStr = formatDateString(cell.date);
                         const dayEvents = filteredEvents.filter((e) => e.date === cellDateStr);
-                        const isTodayDate = isSameDay(cell.date, new Date(2026, 5, 2)); // Mock Today June 2, 2026
+                        const isTodayDate = isSameDay(cell.date, new Date());
                         const isSelected = isSameDay(cell.date, selectedDate);
 
                         return (
@@ -758,7 +764,7 @@ function CalendarPage() {
                     {weekDays.map((day, idx) => {
                       const dayStr = formatDateString(day);
                       const dayEvents = filteredEvents.filter((e) => e.date === dayStr);
-                      const isTodayDate = isSameDay(day, new Date(2026, 5, 2));
+                      const isTodayDate = isSameDay(day, new Date());
 
                       return (
                         <div key={idx} className="flex flex-col h-full bg-card min-w-[100px]">

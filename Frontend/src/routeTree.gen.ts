@@ -24,6 +24,9 @@ import { Route as AppCalendarRouteImport } from './routes/app.calendar'
 import { Route as AppBillingRouteImport } from './routes/app.billing'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiRouteImport } from './routes/app.ai'
+import { Route as AppCasesIndexRouteImport } from './routes/app.cases.index'
+import { Route as AppCasesCaseIdRouteImport } from './routes/app.cases.$caseId'
+import { Route as AppCasesCaseIdDocumentsRouteImport } from './routes/app.cases.$caseId.documents'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -100,6 +103,21 @@ const AppAiRoute = AppAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCasesIndexRoute = AppCasesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppCasesRoute,
+} as any)
+const AppCasesCaseIdRoute = AppCasesCaseIdRouteImport.update({
+  id: '/$caseId',
+  path: '/$caseId',
+  getParentRoute: () => AppCasesRoute,
+} as any)
+const AppCasesCaseIdDocumentsRoute = AppCasesCaseIdDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => AppCasesCaseIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,13 +128,16 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/calendar': typeof AppCalendarRoute
-  '/app/cases': typeof AppCasesRoute
+  '/app/cases': typeof AppCasesRouteWithChildren
   '/app/clients': typeof AppClientsRoute
   '/app/documents': typeof AppDocumentsRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/users': typeof AppUsersRoute
   '/app/': typeof AppIndexRoute
+  '/app/cases/$caseId': typeof AppCasesCaseIdRouteWithChildren
+  '/app/cases/': typeof AppCasesIndexRoute
+  '/app/cases/$caseId/documents': typeof AppCasesCaseIdDocumentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,13 +147,15 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/calendar': typeof AppCalendarRoute
-  '/app/cases': typeof AppCasesRoute
   '/app/clients': typeof AppClientsRoute
   '/app/documents': typeof AppDocumentsRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/users': typeof AppUsersRoute
   '/app': typeof AppIndexRoute
+  '/app/cases/$caseId': typeof AppCasesCaseIdRouteWithChildren
+  '/app/cases': typeof AppCasesIndexRoute
+  '/app/cases/$caseId/documents': typeof AppCasesCaseIdDocumentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -144,13 +167,16 @@ export interface FileRoutesById {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/calendar': typeof AppCalendarRoute
-  '/app/cases': typeof AppCasesRoute
+  '/app/cases': typeof AppCasesRouteWithChildren
   '/app/clients': typeof AppClientsRoute
   '/app/documents': typeof AppDocumentsRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/users': typeof AppUsersRoute
   '/app/': typeof AppIndexRoute
+  '/app/cases/$caseId': typeof AppCasesCaseIdRouteWithChildren
+  '/app/cases/': typeof AppCasesIndexRoute
+  '/app/cases/$caseId/documents': typeof AppCasesCaseIdDocumentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -170,6 +196,9 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/users'
     | '/app/'
+    | '/app/cases/$caseId'
+    | '/app/cases/'
+    | '/app/cases/$caseId/documents'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -179,13 +208,15 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/billing'
     | '/app/calendar'
-    | '/app/cases'
     | '/app/clients'
     | '/app/documents'
     | '/app/messages'
     | '/app/settings'
     | '/app/users'
     | '/app'
+    | '/app/cases/$caseId'
+    | '/app/cases'
+    | '/app/cases/$caseId/documents'
   id:
     | '__root__'
     | '/'
@@ -203,6 +234,9 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/users'
     | '/app/'
+    | '/app/cases/$caseId'
+    | '/app/cases/'
+    | '/app/cases/$caseId/documents'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -319,15 +353,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/cases/': {
+      id: '/app/cases/'
+      path: '/'
+      fullPath: '/app/cases/'
+      preLoaderRoute: typeof AppCasesIndexRouteImport
+      parentRoute: typeof AppCasesRoute
+    }
+    '/app/cases/$caseId': {
+      id: '/app/cases/$caseId'
+      path: '/$caseId'
+      fullPath: '/app/cases/$caseId'
+      preLoaderRoute: typeof AppCasesCaseIdRouteImport
+      parentRoute: typeof AppCasesRoute
+    }
+    '/app/cases/$caseId/documents': {
+      id: '/app/cases/$caseId/documents'
+      path: '/documents'
+      fullPath: '/app/cases/$caseId/documents'
+      preLoaderRoute: typeof AppCasesCaseIdDocumentsRouteImport
+      parentRoute: typeof AppCasesCaseIdRoute
+    }
   }
 }
+
+interface AppCasesCaseIdRouteChildren {
+  AppCasesCaseIdDocumentsRoute: typeof AppCasesCaseIdDocumentsRoute
+}
+
+const AppCasesCaseIdRouteChildren: AppCasesCaseIdRouteChildren = {
+  AppCasesCaseIdDocumentsRoute: AppCasesCaseIdDocumentsRoute,
+}
+
+const AppCasesCaseIdRouteWithChildren = AppCasesCaseIdRoute._addFileChildren(
+  AppCasesCaseIdRouteChildren,
+)
+
+interface AppCasesRouteChildren {
+  AppCasesCaseIdRoute: typeof AppCasesCaseIdRouteWithChildren
+  AppCasesIndexRoute: typeof AppCasesIndexRoute
+}
+
+const AppCasesRouteChildren: AppCasesRouteChildren = {
+  AppCasesCaseIdRoute: AppCasesCaseIdRouteWithChildren,
+  AppCasesIndexRoute: AppCasesIndexRoute,
+}
+
+const AppCasesRouteWithChildren = AppCasesRoute._addFileChildren(
+  AppCasesRouteChildren,
+)
 
 interface AppRouteChildren {
   AppAiRoute: typeof AppAiRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppBillingRoute: typeof AppBillingRoute
   AppCalendarRoute: typeof AppCalendarRoute
-  AppCasesRoute: typeof AppCasesRoute
+  AppCasesRoute: typeof AppCasesRouteWithChildren
   AppClientsRoute: typeof AppClientsRoute
   AppDocumentsRoute: typeof AppDocumentsRoute
   AppMessagesRoute: typeof AppMessagesRoute
@@ -341,7 +422,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppBillingRoute: AppBillingRoute,
   AppCalendarRoute: AppCalendarRoute,
-  AppCasesRoute: AppCasesRoute,
+  AppCasesRoute: AppCasesRouteWithChildren,
   AppClientsRoute: AppClientsRoute,
   AppDocumentsRoute: AppDocumentsRoute,
   AppMessagesRoute: AppMessagesRoute,

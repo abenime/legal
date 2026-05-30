@@ -151,8 +151,12 @@ Route::put('/clients/{id}', function (Request $request, $id) {
 });
 
 // Tasks
-Route::get('/tasks', function () {
-    return response()->json(DB::table('tasks')->get());
+Route::get('/tasks', function (Request $request) {
+    $query = DB::table('tasks');
+    if ($request->has('caseId')) {
+        $query->where('caseId', $request->caseId);
+    }
+    return response()->json($query->get());
 });
 
 Route::post('/tasks', function (Request $request) {
@@ -162,8 +166,12 @@ Route::post('/tasks', function (Request $request) {
 });
 
 // Events
-Route::get('/events', function () {
-    return response()->json(DB::table('events')->get());
+Route::get('/events', function (Request $request) {
+    $query = DB::table('events');
+    if ($request->has('caseId')) {
+        $query->where('caseId', $request->caseId);
+    }
+    return response()->json($query->get());
 });
 
 Route::post('/events', function (Request $request) {
@@ -173,8 +181,20 @@ Route::post('/events', function (Request $request) {
 });
 
 // Documents
-Route::get('/documents', function () {
-    return response()->json(DB::table('documents')->get());
+Route::get('/documents', function (Request $request) {
+    $query = DB::table('documents');
+    if ($request->has('caseId')) {
+        $query->where('caseId', $request->caseId);
+    }
+    return response()->json($query->get());
+});
+
+Route::post('/documents', function (Request $request) {
+    $data = $request->all();
+    // In a real app, handle file upload here. 
+    // For now, we'll just insert the metadata as provided by the frontend.
+    DB::table('documents')->insert($data);
+    return response()->json($data, 201);
 });
 
 // Invoices

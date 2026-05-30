@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Upload,
   FileText,
@@ -14,6 +14,7 @@ import {
   Eye,
   Check,
   FileCheck,
+  Briefcase,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useApi } from "@/lib/use-api";
@@ -319,6 +320,13 @@ function DocumentsPage() {
                               >
                                 <Pencil className="mr-2 h-4 w-4" /> Rename
                               </DropdownMenuItem>
+                              {d.caseId && (
+                                <DropdownMenuItem asChild>
+                                  <Link to="/app/cases/$caseId" params={{ caseId: d.caseId }}>
+                                    <Briefcase className="mr-2 h-4 w-4" /> View Case
+                                  </Link>
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
                                 className="text-destructive focus:bg-destructive/10"
                                 onClick={(e) => {
@@ -376,6 +384,13 @@ function DocumentsPage() {
                           >
                             <Pencil className="mr-2 h-4 w-4" /> Rename
                           </DropdownMenuItem>
+                          {d.caseId && (
+                            <DropdownMenuItem asChild>
+                              <Link to="/app/cases/$caseId" params={{ caseId: d.caseId }}>
+                                <Briefcase className="mr-2 h-4 w-4" /> View Case
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             className="text-destructive focus:bg-destructive/10"
                             onClick={(e) => {
