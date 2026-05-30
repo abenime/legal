@@ -190,9 +190,33 @@ Route::get('/documents', function (Request $request) {
 });
 
 Route::post('/documents', function (Request $request) {
+    if ($request->hasFile('file')) {
+        $file = $request->file('file');
+        $caseId = $request->input('caseId');
+        $path = $file->store('documents', 'public');
+        
+        $data = [
+            'id' => 'doc-' . time() . '-' . uniqid(),
+            'caseId' => $caseId,
+            'name' => $file->getClientOriginalName(),
+            'type' => strtoupper($file->getClientOriginalExtension()) ?: 'PDF',
+            'size' => round($file->getSize() / 1024 / 1024, 2) . ' MB',
+            'uploadedBy' => $request->input('uploadedBy', 'System'),
+            'uploadedAt' => now()->toDateString(),
+            'signed' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+        
+        DB::table('documents')->insert($data);
+        return response()->json($data, 201);
+    }
+    
+    // Fallback for metadata-only (simulated/legacy)
     $data = $request->all();
-    // In a real app, handle file upload here. 
-    // For now, we'll just insert the metadata as provided by the frontend.
+    if (!isset($data['id'])) {
+        $data['id'] = 'doc-' . time();
+    }
     DB::table('documents')->insert($data);
     return response()->json($data, 201);
 });

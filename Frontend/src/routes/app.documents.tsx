@@ -68,7 +68,7 @@ type DocumentItem = {
 
 function DocumentsPage() {
   const { user, isClient } = useAuth();
-  const { data: documents, loading } = useApi(() => api.getDocuments(user!), [user?.id]);
+  const { data: documents, refresh, loading } = useApi(() => api.getDocuments(user!), [user?.id]);
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
@@ -77,6 +77,7 @@ function DocumentsPage() {
   const [deleteDoc, setDeleteDoc] = useState<DocumentItem | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [signedDocIds, setSignedDocIds] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const handleSignDocument = (docId: string) => {
     setSignedDocIds((prev) => [...prev, docId]);
@@ -108,13 +109,52 @@ function DocumentsPage() {
     ];
   };
 
-  const onDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      toast.success(`${acceptedFiles.length} file(s) uploaded successfully.`);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append("file", files[i]);
+        if (currentFolder) formData.append("caseId", currentFolder);
+        formData.append("uploadedBy", user?.name || "System");
+        await api.createDocument(formData);
+      }
+      refresh();
+      toast.success(`${files.length} file(s) uploaded successfully`);
+    } catch (error) {
+      toast.error("Failed to upload document(s)");
+    } finally {
+      setUploading(false);
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+  const onDrop = async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of acceptedFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        if (currentFolder) formData.append("caseId", currentFolder);
+        formData.append("uploadedBy", user?.name || "System");
+        await api.createDocument(formData);
+      }
+      refresh();
+      toast.success(`${acceptedFiles.length} file(s) uploaded successfully`);
+    } catch (error) {
+      toast.error("Failed to upload document(s)");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+    onDrop,
+    noClick: true
+  });
 
   // Group documents by caseId for folders
   const folders = Array.from(new Set((documents ?? []).map((d: DocumentItem) => d.caseId))).filter(
@@ -159,10 +199,16 @@ function DocumentsPage() {
                 <Grid className="h-4 w-4" />
               </ToggleGroupItem>
             </ToggleGroup>
-            <div {...getRootProps()}>
-              <input {...getInputProps()} />
-              <Button>
-                <Upload className="mr-2 h-4 w-4" /> Upload
+            <div className="relative">
+              <Button disabled={uploading}>
+                <Upload className="mr-2 h-4 w-4" /> {uploading ? "Uploading..." : "Upload"}
+                <input 
+                  type="file" 
+                  multiple 
+                  className="absolute inset-0 opacity-0 cursor-pointer" 
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                />
               </Button>
             </div>
           </div>
@@ -584,10 +630,12 @@ function DocumentsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{deleteDoc?.name}"? This action cannot be undone.
-            </DialogDescription>
           </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete "{deleteDoc?.name}"?
+            </p>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDoc(null)}>
               Cancel

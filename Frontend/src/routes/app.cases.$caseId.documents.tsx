@@ -22,27 +22,30 @@ function CaseDocumentsPage() {
     loading,
   } = useApi(() => api.getDocuments(user!, caseId), [caseId]);
   const [search, setSearch] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const filteredDocs = (documents || []).filter((d) =>
     d.name.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const handleFakeUpload = async () => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
     try {
-      await api.createDocument({
-        id: `doc-${Date.now()}`,
-        caseId,
-        name: `New Document ${Date.now()}.pdf`,
-        type: "PDF",
-        size: "1.2 MB",
-        uploadedBy: user?.name || "System",
-        uploadedAt: new Date().toISOString().split("T")[0],
-        signed: false,
-      });
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("caseId", caseId);
+      formData.append("uploadedBy", user?.name || "System");
+
+      await api.createDocument(formData);
       refresh();
-      toast.success("Document uploaded successfully (Simulated)");
+      toast.success("Document uploaded successfully");
     } catch (error) {
       toast.error("Failed to upload document");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -65,8 +68,14 @@ function CaseDocumentsPage() {
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" /> Download All
           </Button>
-          <Button size="sm" onClick={handleFakeUpload}>
-            <Upload className="mr-2 h-4 w-4" /> Upload
+          <Button size="sm" className="relative cursor-pointer" disabled={uploading}>
+            <Upload className="mr-2 h-4 w-4" /> {uploading ? "Uploading..." : "Upload"}
+            <input
+              type="file"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              onChange={handleFileUpload}
+              disabled={uploading}
+            />
           </Button>
         </div>
       </div>
