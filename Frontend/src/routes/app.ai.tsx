@@ -123,6 +123,10 @@ function AIPage() {
     if (!draftCase || !draftTemplate) return;
     
     const selectedCase = cases?.find(c => c.id === draftCase);
+    const customDetails = Object.entries(selectedCase?.details || {})
+      .map(([key, value]) => `- ${key}: ${value}`)
+      .join("\n");
+
     const caseContext = selectedCase ? `
 Case Details:
 - Title: ${selectedCase.title}
@@ -134,6 +138,8 @@ Case Details:
 - Court: ${selectedCase.court || "N/A"}
 - Judge: ${selectedCase.judge || "N/A"}
 - Priority: ${selectedCase.priority}
+- Description: ${selectedCase.description || "No description provided."}
+${customDetails ? `\nAdditional Case Context:\n${customDetails}` : ""}
 ` : "No case context provided.";
 
     const draftingPrompt = `I need you to draft a ${draftTemplate}.
@@ -162,6 +168,10 @@ Please provide the draft in a professional legal format using Markdown for struc
     if (!summaryCase) return;
 
     const selectedCase = (cases as any)?.find((c: any) => c.id === summaryCase);
+    const customDetails = Object.entries(selectedCase?.details || {})
+      .map(([key, value]) => `- ${key}: ${value}`)
+      .join("\n");
+
     const caseContext = selectedCase ? `
 Case Details:
 - Title: ${selectedCase.title}
@@ -175,6 +185,8 @@ Case Details:
 - Priority: ${selectedCase.priority}
 - Opened At: ${selectedCase.openedAt}
 - Next Deadline: ${selectedCase.nextDeadline || "None scheduled"}
+- Description: ${selectedCase.description || "No description provided."}
+${customDetails ? `\nAdditional Case Context:\n${customDetails}` : ""}
 ` : "No case context provided.";
 
     const summaryPrompt = `Provide a comprehensive executive summary for the following case.
