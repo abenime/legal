@@ -280,6 +280,9 @@ Route::get('/events', function (Request $request) {
     if ($request->has('caseId')) {
         $query->where('caseId', $request->caseId);
     }
+    if ($request->has('clientId')) {
+        $query->where('clientId', $request->clientId);
+    }
     return response()->json($query->get());
 });
 
@@ -330,9 +333,137 @@ Route::post('/documents', function (Request $request) {
     return response()->json($data, 201);
 });
 
+// Quick Actions
+Route::post('/quick-actions/document-requests', function (Request $request) {
+    $validated = $request->validate([
+        'title' => ['required', 'string', 'max:255'],
+        'description' => ['nullable', 'string'],
+        'caseId' => ['nullable', 'string'],
+        'clientId' => ['nullable', 'string'],
+        'requestedBy' => ['nullable', 'string', 'max:255'],
+        'assignedTo' => ['nullable', 'string', 'max:255'],
+        'priority' => ['nullable', 'in:low,medium,high'],
+        'dueDate' => ['nullable', 'date'],
+        'status' => ['nullable', 'in:open,in_review,fulfilled,closed'],
+        'file' => ['nullable', 'file', 'max:20480'],
+    ]);
+
+    $attachmentPath = null;
+    $attachmentName = null;
+
+    if ($request->hasFile('file')) {
+        $file = $request->file('file');
+        $attachmentPath = $file->store('document-requests', 'public');
+        $attachmentName = $file->getClientOriginalName();
+    }
+
+    $record = [
+        'id' => 'dr-' . time() . '-' . uniqid(),
+        'title' => $validated['title'],
+        'description' => $validated['description'] ?? null,
+        'caseId' => $validated['caseId'] ?? null,
+        'clientId' => $validated['clientId'] ?? null,
+        'requestedBy' => $validated['requestedBy'] ?? null,
+        'assignedTo' => $validated['assignedTo'] ?? null,
+        'priority' => $validated['priority'] ?? 'medium',
+        'status' => $validated['status'] ?? 'open',
+        'dueDate' => $validated['dueDate'] ?? null,
+        'attachmentPath' => $attachmentPath,
+        'attachmentName' => $attachmentName,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ];
+
+    DB::table('document_requests')->insert($record);
+
+    return response()->json($record, 201);
+});
+
+Route::post('/quick-actions/payments', function (Request $request) {
+    $validated = $request->validate([
+        'amount' => ['required', 'numeric', 'min:0.01'],
+        'method' => ['required', 'string', 'max:50'],
+        'invoiceId' => ['nullable', 'string'],
+        'clientId' => ['nullable', 'string'],
+        'caseId' => ['nullable', 'string'],
+        'reference' => ['nullable', 'string', 'max:255'],
+        'notes' => ['nullable', 'string'],
+        'status' => ['nullable', 'in:pending,paid,failed,refunded'],
+        'paidAt' => ['nullable', 'date'],
+    ]);
+
+    $record = [
+        'id' => 'pay-' . time() . '-' . uniqid(),
+        'invoiceId' => $validated['invoiceId'] ?? null,
+        'clientId' => $validated['clientId'] ?? null,
+        'caseId' => $validated['caseId'] ?? null,
+        'amount' => $validated['amount'],
+        'method' => $validated['method'],
+        'reference' => $validated['reference'] ?? null,
+        'notes' => $validated['notes'] ?? null,
+        'status' => $validated['status'] ?? 'paid',
+        'paidAt' => $validated['paidAt'] ?? now()->toDateString(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ];
+
+    DB::table('payments')->insert($record);
+
+    if (!empty($validated['invoiceId'])) {
+        DB::table('invoices')
+            ->where('id', $validated['invoiceId'])
+            ->update([
+                'status' => $record['status'] === 'paid' ? 'paid' : $record['status'],
+                'updated_at' => now(),
+            ]);
+    }
+
+    return response()->json($record, 201);
+});
+
+Route::post('/quick-actions/appointments', function (Request $request) {
+    $validated = $request->validate([
+        'title' => ['required', 'string', 'max:255'],
+        'date' => ['required', 'date'],
+        'time' => ['nullable', 'string', 'max:30'],
+        'location' => ['nullable', 'string', 'max:255'],
+        'caseId' => ['nullable', 'string'],
+        'clientId' => ['nullable', 'string'],
+        'notes' => ['nullable', 'string'],
+        'reminder' => ['nullable', 'string', 'max:255'],
+    ]);
+
+    $record = [
+        'id' => 'evt-' . time() . '-' . uniqid(),
+        'caseId' => $validated['caseId'] ?? null,
+        'title' => $validated['title'],
+        'date' => $validated['date'],
+        'time' => $validated['time'] ?? null,
+        'type' => 'appointment',
+        'location' => $validated['location'] ?? null,
+        'reminder' => $validated['reminder'] ?? null,
+        'notes' => $validated['notes'] ?? null,
+        'clientId' => $validated['clientId'] ?? null,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ];
+
+    DB::table('events')->insert($record);
+
+    return response()->json($record, 201);
+});
+
 // Invoices
 Route::get('/invoices', function () {
     return response()->json(DB::table('invoices')->get());
+});
+
+Route::get('/payments', function () {
+    return response()->json(DB::table('payments')->get());
+});
+
+Route::get('/document-requests', function () {
+    return response()->json(DB::table('document_requests')->get());
 });
 
 // Messages
