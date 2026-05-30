@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
@@ -16,57 +17,80 @@ class UserSeeder extends Seeder
             [
                 "id" => "u1",
                 "email" => "admin@firm.com",
-                "password" => "admin",
+                "password" => Hash::make("admin"),
                 "name" => "Eleanor Vance",
                 "role" => "admin",
                 "title" => "Managing Partner",
                 "avatar" => "EV",
-                "caseIds" => json_encode([])
+                "caseIds" => json_encode([]),
+                "phone" => "+1 (555) 100-0001",
             ],
             [
                 "id" => "u2",
                 "email" => "lawyer@firm.com",
-                "password" => "lawyer",
+                "password" => Hash::make("lawyer"),
                 "name" => "Marcus Hale",
                 "role" => "lawyer",
                 "title" => "Senior Associate",
                 "avatar" => "MH",
-                "caseIds" => json_encode([])
+                "caseIds" => json_encode([]),
+                "phone" => "+1 (555) 100-0002",
             ],
             [
                 "id" => "u3",
                 "email" => "paralegal@firm.com",
-                "password" => "paralegal",
+                "password" => Hash::make("paralegal"),
                 "name" => "Sofia Reyes",
                 "role" => "paralegal",
                 "title" => "Paralegal",
                 "avatar" => "SR",
-                "caseIds" => json_encode([])
+                "caseIds" => json_encode([]),
+                "phone" => "+1 (555) 100-0003",
             ],
             [
                 "id" => "u4",
                 "email" => "client@firm.com",
-                "password" => "client",
+                "password" => Hash::make("client"),
                 "name" => "James Whitaker",
                 "role" => "client",
                 "title" => "Client",
                 "avatar" => "JW",
-                "caseIds" => json_encode([])
+                "caseIds" => json_encode([]),
+                "phone" => "+1 (555) 100-0004",
             ],
             [
                 "id" => "u5",
                 "email" => "client2@firm.com",
-                "password" => "client",
+                "password" => Hash::make("client"),
                 "name" => "Ana Martinez",
                 "role" => "client",
                 "title" => "Client",
                 "avatar" => "AM",
-                "caseIds" => json_encode([])
+                "caseIds" => json_encode([]),
+                "phone" => "+1 (555) 100-0005",
             ]
         ];
 
         foreach ($users as $user) {
             DB::table('users')->insert($user);
+
+            if ($user['role'] === 'client') {
+                DB::table('clients')->insert([
+                    'id' => $user['id'],
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'phone' => $user['phone'],
+                    'company' => null,
+                    'since' => now()->toDateString(),
+                    'activeCases' => 0,
+                    'outstanding' => 0,
+                    'retainerBalance' => 0,
+                    'address' => null,
+                    'notes' => json_encode([]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
         $clients = [

@@ -86,8 +86,10 @@ function SignupPage() {
       <div className="flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-sm space-y-8">
           <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tight">Create an account</h2>
-            <p className="text-sm text-muted-foreground">Register for your client account.</p>
+            <h2 className="text-2xl font-semibold tracking-tight">Create a client portal account</h2>
+            <p className="text-sm text-muted-foreground">
+              Register here if you are a client. Firm staff receive separate credentials.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

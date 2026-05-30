@@ -4,6 +4,60 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+if (! function_exists('client_portal_case_ids')) {
+    function client_portal_case_ids(mixed $caseIds): array
+    {
+        if (is_array($caseIds)) {
+            return $caseIds;
+        }
+
+        if (is_string($caseIds) && $caseIds !== '') {
+            $decoded = json_decode($caseIds, true);
+
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+}
+
+if (! function_exists('client_portal_avatar')) {
+    function client_portal_avatar(string $name): string
+    {
+        $initials = '';
+
+        foreach (preg_split('/\s+/', trim($name)) ?: [] as $word) {
+            if ($word !== '') {
+                $initials .= strtoupper(substr($word, 0, 1));
+            }
+
+            if (strlen($initials) >= 2) {
+                break;
+            }
+        }
+
+        return $initials !== '' ? substr($initials, 0, 2) : 'U';
+    }
+}
+
+if (! function_exists('client_portal_user_payload')) {
+    function client_portal_user_payload(object $user): array
+    {
+        return [
+            'id' => $user->id,
+            'email' => $user->email,
+            'name' => $user->name,
+            'role' => $user->role,
+            'title' => $user->title ?? 'Client',
+            'avatar' => $user->avatar ?? client_portal_avatar($user->name),
+            'caseIds' => client_portal_case_ids($user->caseIds ?? []),
+            'phone' => $user->phone ?? null,
+        ];
+    }
+}
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -11,75 +65,97 @@ Route::get('/user', function (Request $request) {
 
 // Login
 Route::post('/login', function (Request $request) {
+    $validated = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required', 'string'],
+    ]);
+
     $user = DB::table('users')
-        ->where('email', $request->email)
-        ->where('password', $request->password)
+        ->where('email', $validated['email'])
         ->first();
 
     if (!$user) {
-        return response()->json(null, 401);
+        return response()->json(['message' => 'Invalid email or password'], 401);
     }
 
-    if (isset($user->caseIds)) {
-        $user->caseIds = json_decode($user->caseIds);
-    } else {
-        $user->caseIds = [];
+    $plainTextMatch = hash_equals((string) $user->password, $validated['password']);
+    $hashedMatch = Hash::check($validated['password'], $user->password);
+
+    if (! $plainTextMatch && ! $hashedMatch) {
+        return response()->json(['message' => 'Invalid email or password'], 401);
     }
-    return response()->json($user);
+
+    if ($plainTextMatch && ! $hashedMatch) {
+        DB::table('users')
+            ->where('id', $user->id)
+            ->update([
+                'password' => Hash::make($validated['password']),
+            ]);
+    }
+
+    return response()->json(client_portal_user_payload($user));
 });
 
 // Signup
 Route::post('/signup', function (Request $request) {
-    $data = $request->only(['name', 'email', 'password', 'phone']);
-    $exists = DB::table('users')->where('email', $data['email'])->exists();
-    if ($exists) {
-        return response()->json(['error' => 'Email already registered'], 400);
-    }
+    $validated = $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+        'password' => ['required', 'string', 'min:8'],
+        'phone' => ['required', 'string', 'max:30'],
+    ]);
 
-    $words = explode(' ', $data['name']);
-    $initials = '';
-    foreach ($words as $word) {
-        if (!empty($word)) {
-            $initials .= strtoupper(substr($word, 0, 1));
-        }
-    }
-    $initials = substr($initials, 0, 2);
-    if (empty($initials)) {
-        $initials = 'U';
-    }
+    $userId = 'u-' . Str::ulid();
+    $avatar = client_portal_avatar($validated['name']);
 
-    $newUser = [
-        'id' => 'u-' . time(),
-        'email' => $data['email'],
-        'password' => $data['password'],
-        'name' => $data['name'],
-        'role' => 'client',
-        'title' => 'Client',
-        'avatar' => $initials,
-        'caseIds' => json_encode([]),
-        'phone' => $data['phone'] ?? null,
-    ];
+    DB::transaction(function () use ($validated, $userId, $avatar): void {
+        DB::table('users')->insert([
+            'id' => $userId,
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'name' => $validated['name'],
+            'role' => 'client',
+            'title' => 'Client',
+            'avatar' => $avatar,
+            'caseIds' => json_encode([]),
+            'phone' => $validated['phone'],
+        ]);
 
-    DB::table('users')->insert($newUser);
-    $newUser['caseIds'] = [];
-    return response()->json($newUser, 201);
+        DB::table('clients')->insert([
+            'id' => $userId,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'company' => null,
+            'since' => now()->toDateString(),
+            'activeCases' => 0,
+            'outstanding' => 0,
+            'retainerBalance' => 0,
+            'address' => null,
+            'notes' => json_encode([]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    });
+
+    $user = DB::table('users')->where('id', $userId)->first();
+
+    return response()->json(client_portal_user_payload($user), 201);
 });
 
 // Users
 Route::get('/users', function () {
     $users = DB::table('users')->get();
-    foreach ($users as $user) {
-        if (isset($user->caseIds)) {
-            $user->caseIds = json_decode($user->caseIds);
-        } else {
-            $user->caseIds = [];
-        }
-    }
-    return response()->json($users);
+
+    return response()->json($users->map(fn ($user) => client_portal_user_payload($user)));
 });
 
 Route::put('/users/{id}/role', function (Request $request, $id) {
-    $newRole = $request->input('role');
+    $validated = $request->validate([
+        'role' => ['required', 'in:admin,lawyer,paralegal,client'],
+    ]);
+
+    $newRole = $validated['role'];
     $titleMap = [
         'admin' => 'Managing Partner',
         'lawyer' => 'Attorney',
@@ -95,12 +171,12 @@ Route::put('/users/{id}/role', function (Request $request, $id) {
     ]);
 
     $user = DB::table('users')->where('id', $id)->first();
-    if ($user && isset($user->caseIds)) {
-        $user->caseIds = json_decode($user->caseIds);
-    } else if ($user) {
-        $user->caseIds = [];
+
+    if (!$user) {
+        return response()->json(['message' => 'User not found'], 404);
     }
-    return response()->json($user);
+
+    return response()->json(client_portal_user_payload($user));
 });
 
 // Cases

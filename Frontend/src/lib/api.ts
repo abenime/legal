@@ -4,7 +4,6 @@ export type Role = "admin" | "lawyer" | "paralegal" | "client";
 export interface User {
   id: string;
   email: string;
-  password?: string;
   name: string;
   role: Role;
   title: string;
@@ -12,6 +11,12 @@ export interface User {
   caseIds?: string[];
   phone?: string;
 }
+
+type ApiErrorPayload = {
+  message?: string;
+  error?: string;
+  errors?: Record<string, string[] | string>;
+};
 
 export interface Case {
   id: string;
@@ -124,16 +129,25 @@ const fetchApi = async <T>(url: string, options?: RequestInit): Promise<T> => {
   });
   if (!response.ok) {
     if (response.status === 401) return null as T;
-    
-    let errorDetail = response.statusText;
-    try {
-      const errorJson = await response.json();
-      errorDetail = errorJson.error || errorJson.message || response.statusText;
-    } catch (e) {
-      // Fallback to statusText if JSON parsing fails
+
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      try {
+        const payload = (await response.json()) as ApiErrorPayload;
+        const firstValidationError = payload.errors
+          ? Object.values(payload.errors)
+              .flat()
+              .find((message) => Boolean(message))
+          : undefined;
+
+        throw new Error(firstValidationError ?? payload.message ?? payload.error ?? response.statusText);
+      } catch {
+        throw new Error(`API error: ${response.statusText}`);
+      }
     }
-    
-    throw new Error(errorDetail);
+
+    const text = await response.text();
+    throw new Error(text.trim() || `API error: ${response.statusText}`);
   }
   return response.json();
 };
