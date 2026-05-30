@@ -294,10 +294,11 @@ export const api = {
   // Messages
   async getMessages(user: User) {
     const all = await fetchApi<Message[]>("/messages");
+    const filtered = all.filter((m: any) => m.caseId !== "AI_CHAT");
     if (user.role === "client") {
-      return all.filter((m) => m.from === user.id || m.to === user.id);
+      return filtered.filter((m) => m.from === user.id || m.to === user.id);
     }
-    return all;
+    return filtered;
   },
   createMessage: (data: Partial<Message>) =>
     fetchApi<Message>("/messages", {

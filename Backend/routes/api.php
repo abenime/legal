@@ -468,7 +468,7 @@ Route::get('/document-requests', function () {
 
 // Messages
 Route::get('/messages', function () {
-    return response()->json(DB::table('messages')->get());
+    return response()->json(DB::table('messages')->where('caseId', '!=', 'AI_CHAT')->get());
 });
 
 Route::post('/messages', function (Request $request) {
