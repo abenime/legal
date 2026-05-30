@@ -30,6 +30,8 @@ export interface Case {
   nextDeadline: string | null;
   billable: number;
   priority: "low" | "medium" | "high";
+  description?: string;
+  details?: Record<string, string>;
 }
 
 export interface Client {
@@ -195,6 +197,11 @@ export const api = {
   createCase: (data: Partial<Case>) =>
     fetchApi<Case>("/cases", {
       method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateCase: (id: string, data: Partial<Case>) =>
+    fetchApi<Case>(`/cases/${id}`, {
+      method: "PUT",
       body: JSON.stringify(data),
     }),
 

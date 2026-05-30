@@ -105,17 +105,49 @@ Route::put('/users/{id}/role', function (Request $request, $id) {
 
 // Cases
 Route::get('/cases', function () {
-    return response()->json(DB::table('case_models')->get());
+    $cases = DB::table('case_models')->get();
+    foreach ($cases as $case) {
+        if (isset($case->details) && is_string($case->details)) {
+            $case->details = json_decode($case->details);
+        }
+    }
+    return response()->json($cases);
 });
 
 Route::get('/cases/{id}', function ($id) {
-    return response()->json(DB::table('case_models')->where('id', $id)->first());
+    $case = DB::table('case_models')->where('id', $id)->first();
+    if ($case && isset($case->details) && is_string($case->details)) {
+        $case->details = json_decode($case->details);
+    }
+    return response()->json($case);
 });
 
 Route::post('/cases', function (Request $request) {
     $data = $request->all();
+    if (isset($data['details']) && is_array($data['details'])) {
+        $data['details'] = json_encode($data['details']);
+    }
     DB::table('case_models')->insert($data);
     return response()->json($data, 201);
+});
+
+Route::put('/cases/{id}', function (Request $request, $id) {
+    $data = $request->all();
+    if (isset($data['details']) && is_array($data['details'])) {
+        $data['details'] = json_encode($data['details']);
+    }
+    
+    // Remove created_at and updated_at if they exist in payload to avoid DB errors
+    unset($data['created_at']);
+    unset($data['updated_at']);
+
+    DB::table('case_models')->where('id', $id)->update($data);
+    
+    $case = DB::table('case_models')->where('id', $id)->first();
+    if ($case && isset($case->details) && is_string($case->details)) {
+        $case->details = json_decode($case->details);
+    }
+    return response()->json($case);
 });
 
 // Clients
