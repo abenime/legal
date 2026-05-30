@@ -11,6 +11,7 @@ import {
   Briefcase,
   FileText,
   ChevronLeft,
+  Users,
   Send,
   Sparkles,
   AlertTriangle,

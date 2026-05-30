@@ -82,12 +82,14 @@ export interface Document {
 
 export interface Invoice {
   id: string;
-  clientId: string;
+  number: string;
+  clientId: string | null;
+  client: string;
   caseId: string;
   amount: number;
   status: string;
-  date: string;
-  dueDate: string;
+  issued: string;
+  due: string;
 }
 
 export interface Message {
