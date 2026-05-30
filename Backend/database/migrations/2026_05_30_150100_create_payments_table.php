@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table) {
+        Schema::create('payments', function (Blueprint $table): void {
             $table->string('id')->primary();
-            $table->string('caseId')->nullable();
+            $table->string('invoiceId')->nullable();
             $table->string('clientId')->nullable();
-            $table->string('title');
-            $table->date('date');
-            $table->string('time')->nullable();
-            $table->string('type');
-            $table->string('location')->nullable();
-            $table->string('reminder')->nullable();
+            $table->string('caseId')->nullable();
+            $table->decimal('amount', 12, 2);
+            $table->string('method');
+            $table->string('reference')->nullable();
             $table->text('notes')->nullable();
+            $table->string('status')->default('paid');
+            $table->date('paidAt')->nullable();
             $table->timestamps();
         });
     }
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('events');
+        Schema::dropIfExists('payments');
     }
 };
