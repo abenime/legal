@@ -10,6 +10,7 @@ import {
   Upload,
   AlertTriangle,
   CheckCircle2,
+  Download,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -30,6 +31,9 @@ import { useApi } from "@/lib/use-api";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { jsPDF } from "jspdf";
+import { Document, Packer, Paragraph, TextRun } from "docx";
+import { saveAs } from "file-saver";
 
 export const Route = createFileRoute("/app/ai")({
   component: AIPage,
@@ -97,6 +101,74 @@ function AIPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const stripMarkdown = (text: string) => {
+    return text
+      .replace(/^#+\s+/gm, "") // Remove headers
+      .replace(/\*\*(.*?)\*\*/g, "$1") // Remove bold
+      .replace(/\*(.*?)\*/g, "$1") // Remove italic
+      .replace(/__(.*?)__/g, "$1") // Remove bold underscore
+      .replace(/_(.*?)_/g, "$1") // Remove italic underscore
+      .replace(/`(.*?)`/g, "$1") // Remove inline code
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1") // Remove links
+      .replace(/^\s*[-+*]\s+/gm, "• ") // Standardize bullets
+      .replace(/```[\s\S]*?```/g, (match) => match.replace(/```/g, "")) // Remove code blocks backticks
+      .trim();
+  };
+
+  const exportToPDF = (text: string) => {
+    try {
+      const cleanText = stripMarkdown(text);
+      const doc = new jsPDF();
+      const margin = 15;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const splitText = doc.splitTextToSize(cleanText, pageWidth - margin * 2);
+      
+      let cursorY = 20;
+      const lineHeight = 7;
+
+      splitText.forEach((line: string) => {
+        if (cursorY > pageHeight - margin) {
+          doc.addPage();
+          cursorY = 20;
+        }
+        doc.text(line, margin, cursorY);
+        cursorY += lineHeight;
+      });
+
+      doc.save(`Legal_AI_Export_${Date.now()}.pdf`);
+      toast.success("PDF exported successfully");
+    } catch (error) {
+      console.error("PDF Export Error:", error);
+      toast.error("Failed to export PDF");
+    }
+  };
+
+  const exportToWord = async (text: string) => {
+    try {
+      const cleanText = stripMarkdown(text);
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: cleanText.split("\n").map((line) => {
+              return new Paragraph({
+                children: [new TextRun(line)],
+              });
+            }),
+          },
+        ],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `Legal_AI_Export_${Date.now()}.docx`);
+      toast.success("Word document exported successfully");
+    } catch (error) {
+      console.error("Word Export Error:", error);
+      toast.error("Failed to export Word document");
+    }
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -289,7 +361,7 @@ Use Markdown for a clear, professional presentation.`;
         <div className="flex-1 overflow-y-auto p-6 bg-muted/10">
           {activeTool === "chat" && (
             <div className="mx-auto max-w-3xl space-y-6 flex flex-col h-full">
-              <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pb-4">
+              <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pb-4 text-slate-900 dark:text-slate-100">
                 {messages.length === 0 && (
                   <div className="text-center py-12">
                     <Sparkles className="h-12 w-12 text-accent/20 mx-auto mb-4" />
@@ -307,16 +379,36 @@ Use Markdown for a clear, professional presentation.`;
                     className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl p-4 text-sm ${
+                      className={`max-w-[85%] rounded-2xl p-4 text-sm relative group ${
                         m.role === "user"
                           ? "bg-primary text-primary-foreground rounded-tr-none"
-                          : "bg-card border border-border text-foreground rounded-tl-none"
+                          : "bg-card border border-border text-foreground rounded-tl-none shadow-sm"
                       }`}
                     >
                       {m.role === "ai" ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-p:leading-relaxed prose-pre:bg-muted prose-pre:p-3 prose-pre:rounded-md">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
-                        </div>
+                        <>
+                          <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-p:leading-relaxed prose-pre:bg-muted prose-pre:p-3 prose-pre:rounded-md">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
+                          </div>
+                          <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-border/50">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 text-[10px] uppercase font-bold tracking-tight cursor-pointer"
+                              onClick={() => exportToPDF(m.text)}
+                            >
+                              <FileText className="h-3 w-3 mr-1.5" /> PDF
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 text-[10px] uppercase font-bold tracking-tight cursor-pointer"
+                              onClick={() => exportToWord(m.text)}
+                            >
+                              <Download className="h-3 w-3 mr-1.5" /> Word
+                            </Button>
+                          </div>
+                        </>
                       ) : (
                         <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
                       )}
@@ -451,7 +543,7 @@ Use Markdown for a clear, professional presentation.`;
                       e.stopPropagation();
                       handleReview();
                     }}
-                    className="relative z-10"
+                    className="relative z-10 cursor-pointer"
                   >
                     {isLoading ? "Processing..." : reviewFile ? "Start AI Review" : "Select File"}
                   </Button>
