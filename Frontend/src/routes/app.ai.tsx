@@ -11,11 +11,13 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { PageHeader } from "@/components/ui-shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -27,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { useApi } from "@/lib/use-api";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/ai")({
   component: AIPage,
@@ -59,8 +62,6 @@ const TOOLS = [
   },
 ];
 
-import { toast } from "sonner";
-
 function AIPage() {
   const { user } = useAuth();
   const [activeTool, setActiveTool] = useState<string>("chat");
@@ -71,6 +72,19 @@ function AIPage() {
   const [messages, setMessages] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Load history
+  useEffect(() => {
+    if (user?.id) {
+      api.getAIHistory(user.id).then((history) => {
+        const formatted = history.map((m: any) => ({
+          role: m.from === user.id ? "user" : "ai",
+          text: m.body,
+        }));
+        setMessages(formatted);
+      });
+    }
+  }, [user?.id]);
+
   // Drafting state
   const [draftTemplate, setDraftTemplate] = useState("");
   const [draftCase, setDraftCase] = useState("");
@@ -78,6 +92,14 @@ function AIPage() {
 
   const [summaryCase, setSummaryCase] = useState("");
   const [summaryFocus, setSummaryFocus] = useState("");
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleAskAI = async () => {
     if (!prompt.trim()) return;
@@ -88,7 +110,7 @@ function AIPage() {
     setIsLoading(true);
 
     try {
-      const response = await api.askAI(userMessage);
+      const response = await api.askAI(userMessage, user?.id);
       setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
     } catch (error: any) {
       toast.error(error.message || "AI request failed. Please try again.");
@@ -101,18 +123,36 @@ function AIPage() {
     if (!draftCase || !draftTemplate) return;
     
     const selectedCase = cases?.find(c => c.id === draftCase);
-    const draftingPrompt = `Draft a ${draftTemplate} for the case "${selectedCase?.title}" (Matter #${selectedCase?.number}). 
-    Additional instructions: ${draftInstructions || "None provided."}`;
+    const caseContext = selectedCase ? `
+Case Details:
+- Title: ${selectedCase.title}
+- Matter Number: ${selectedCase.number}
+- Practice Area: ${selectedCase.practice}
+- Stage: ${selectedCase.stage}
+- Status: ${selectedCase.status}
+- Lead Attorney: ${selectedCase.lead}
+- Court: ${selectedCase.court || "N/A"}
+- Judge: ${selectedCase.judge || "N/A"}
+- Priority: ${selectedCase.priority}
+` : "No case context provided.";
 
-    setMessages((prev) => [...prev, { role: "user", text: draftingPrompt }]);
+    const draftingPrompt = `I need you to draft a ${draftTemplate}.
+
+${caseContext}
+
+Additional instructions from the user: ${draftInstructions || "None provided."}
+
+Please provide the draft in a professional legal format using Markdown for structure.`;
+
+    setMessages((prev) => [...prev, { role: "user", text: `Draft a ${draftTemplate} for case ${selectedCase?.title}` }]);
     setActiveTool("chat");
     setIsLoading(true);
 
     try {
-      const response = await api.askAI(draftingPrompt);
+      const response = await api.askAI(draftingPrompt, user?.id);
       setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
-    } catch (error) {
-      toast.error("Drafting failed.");
+    } catch (error: any) {
+      toast.error(error.message || "Drafting failed.");
     } finally {
       setIsLoading(false);
     }
@@ -122,15 +162,35 @@ function AIPage() {
     if (!summaryCase) return;
 
     const selectedCase = (cases as any)?.find((c: any) => c.id === summaryCase);
-    const summaryPrompt = `Provide a comprehensive executive summary for the case "${selectedCase?.title}" (Matter #${selectedCase?.number}). 
-    Focus area: ${summaryFocus || "General overview, procedural history, and upcoming deadlines"}.`;
+    const caseContext = selectedCase ? `
+Case Details:
+- Title: ${selectedCase.title}
+- Matter Number: ${selectedCase.number}
+- Practice Area: ${selectedCase.practice}
+- Stage: ${selectedCase.stage}
+- Status: ${selectedCase.status}
+- Lead Attorney: ${selectedCase.lead}
+- Court: ${selectedCase.court || "N/A"}
+- Judge: ${selectedCase.judge || "N/A"}
+- Priority: ${selectedCase.priority}
+- Opened At: ${selectedCase.openedAt}
+- Next Deadline: ${selectedCase.nextDeadline || "None scheduled"}
+` : "No case context provided.";
 
-    setMessages((prev) => [...prev, { role: "user", text: summaryPrompt }]);
+    const summaryPrompt = `Provide a comprehensive executive summary for the following case.
+
+${caseContext}
+
+Focus area for the summary: ${summaryFocus || "General overview, procedural history, and upcoming deadlines"}.
+
+Use Markdown for a clear, professional presentation.`;
+
+    setMessages((prev) => [...prev, { role: "user", text: `Generate summary for case ${selectedCase?.title}` }]);
     setActiveTool("chat");
     setIsLoading(true);
 
     try {
-      const response = await api.askAI(summaryPrompt);
+      const response = await api.askAI(summaryPrompt, user?.id);
       setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
     } catch (error: any) {
       toast.error(error.message || "Summary generation failed.");
@@ -140,17 +200,17 @@ function AIPage() {
   };
 
   const handleReview = async () => {
-    const reviewPrompt = "Review the provided contract (simulated context) and highlight three major risks and two key provisions regarding governing law and payment terms. Format the response clearly.";
+    const reviewPrompt = "Review the provided contract (simulated context) and highlight three major risks and two key provisions regarding governing law and payment terms. Format the response clearly using Markdown.";
 
     setMessages((prev) => [...prev, { role: "user", text: "Please review this contract for risks and provisions." }]);
     setActiveTool("chat");
     setIsLoading(true);
 
     try {
-      const response = await api.askAI(reviewPrompt);
+      const response = await api.askAI(reviewPrompt, user?.id);
       setMessages((prev) => [...prev, { role: "ai", text: response.text }]);
-    } catch (error) {
-      toast.error("Review failed.");
+    } catch (error: any) {
+      toast.error(error.message || "Review failed.");
     } finally {
       setIsLoading(false);
     }
@@ -194,7 +254,7 @@ function AIPage() {
         <div className="flex-1 overflow-y-auto p-6 bg-muted/10">
           {activeTool === "chat" && (
             <div className="mx-auto max-w-3xl space-y-6 flex flex-col h-full">
-              <div className="flex-1 space-y-4 overflow-y-auto pb-4">
+              <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pb-4">
                 {messages.length === 0 && (
                    <div className="text-center py-12">
                       <Sparkles className="h-12 w-12 text-accent/20 mx-auto mb-4" />
@@ -204,12 +264,20 @@ function AIPage() {
                 )}
                 {messages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[80%] rounded-2xl p-4 text-sm ${
+                    <div className={`max-w-[85%] rounded-2xl p-4 text-sm ${
                       m.role === "user" 
                         ? "bg-primary text-primary-foreground rounded-tr-none" 
                         : "bg-card border border-border text-foreground rounded-tl-none"
                     }`}>
-                      <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
+                      {m.role === "ai" ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-p:leading-relaxed prose-pre:bg-muted prose-pre:p-3 prose-pre:rounded-md">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {m.text}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
+                      )}
                     </div>
                   </div>
                 ))}

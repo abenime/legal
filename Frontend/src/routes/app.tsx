@@ -223,9 +223,9 @@ function AppLayout() {
   );
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* Sidebar */}
-      <aside className="hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm lg:flex">
+      <aside className="hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm lg:flex h-full">
         <div className="flex h-16 items-center gap-3 px-6">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground shadow-sm overflow-hidden">
             {settings?.logo_url ? (
@@ -244,7 +244,7 @@ function AppLayout() {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-6 px-4 py-6">
+        <nav className="flex-1 space-y-6 px-4 py-6 overflow-y-auto scrollbar-none">
           {Object.entries(groupedItems).map(([group, groupItems]) => (
             <div key={group} className="space-y-1">
               <h4 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">

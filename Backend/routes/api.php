@@ -289,6 +289,7 @@ Route::get('/ai-debug', function() {
 
 Route::post('/ai-chat', function (Request $request) {
     $prompt = $request->input('prompt');
+    $userId = $request->input('userId');
     
     if (!$prompt) {
         return response()->json(['error' => 'Prompt is required'], 400);
@@ -303,6 +304,22 @@ Route::post('/ai-chat', function (Request $request) {
     $url = "https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=" . $apiKey;
     
     try {
+        // Save user message if userId is provided
+        if ($userId) {
+            DB::table('messages')->insert([
+                'id' => 'm-' . time() . '-' . uniqid(),
+                'from' => $userId,
+                'to' => 'AI_ASSISTANT',
+                'body' => $prompt,
+                'caseId' => 'AI_CHAT',
+                'fromName' => 'You',
+                'at' => now(),
+                'read' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
         $response = Http::asJson()->post($url, [
             'contents' => [
                 [
@@ -324,6 +341,22 @@ Route::post('/ai-chat', function (Request $request) {
         $data = $response->json();
         $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? 'No response from AI.';
 
+        // Save AI response if userId is provided
+        if ($userId) {
+            DB::table('messages')->insert([
+                'id' => 'm-' . time() . '-' . uniqid(),
+                'from' => 'AI_ASSISTANT',
+                'to' => $userId,
+                'body' => $text,
+                'caseId' => 'AI_CHAT',
+                'fromName' => 'AI Assistant',
+                'at' => now(),
+                'read' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
         return response()->json(['text' => $text]);
     } catch (\Exception $e) {
         return response()->json([
@@ -331,6 +364,19 @@ Route::post('/ai-chat', function (Request $request) {
             'message' => $e->getMessage()
         ], 500);
     }
+});
+
+Route::get('/ai-history/{userId}', function ($userId) {
+    $messages = DB::table('messages')
+        ->where('caseId', 'AI_CHAT')
+        ->where(function($query) use ($userId) {
+            $query->where('from', $userId)
+                  ->orWhere('to', $userId);
+        })
+        ->orderBy('at', 'asc')
+        ->get();
+    
+    return response()->json($messages);
 });
 
 // Analytics

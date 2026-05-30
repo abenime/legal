@@ -301,11 +301,13 @@ export const api = {
   },
 
   // AI
-  askAI: (prompt: string) =>
+  askAI: (prompt: string, userId?: string) =>
     fetchApi<{ text: string }>("/ai-chat", {
       method: "POST",
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, userId }),
     }),
+
+  getAIHistory: (userId: string) => fetchApi<any[]>(`/ai-history/${userId}`),
 
   // Analytics — firm only
   getAnalytics: () => fetchApi<Analytics>("/analytics"),

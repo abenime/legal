@@ -60,7 +60,7 @@ function MessagesPage() {
   }, [thread]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <div className="flex h-full flex-col">
       <PageHeader
         title="Messages"
         description="Secure communication between your legal team and clients."
